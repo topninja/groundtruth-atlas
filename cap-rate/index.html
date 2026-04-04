@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CAP//RATE — insurance-adjusted cap rates for every U.S. county</title>
+<meta name="description" content="Re-price every county in the FIO panel: the same house, the same rent, two insurance regimes. The difference is insurance drag — basis points of cap rate lost to premium escalation since 2021. Every figure is labeled SOURCED or MODELED.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%230c0d0b' width='32' height='32'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia' font-size='13' fill='%23d4a06a'%3ECR%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0d0b; --panel:#131510; --panel2:#1a1d16; --line:#2a2e24; --line2:#3a3f32;
+  --ink:#ece6d6; --dim:#9a9384; --faint:#6a6558;
+  --copper:#d4a06a; --sage:#7dba8a; --coral:#e15a4a; --amber:#e8b86d; --iris:#a89ad4; --sky:#7aa8c9;
+  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;line-height:1.45;min-height:100vh}
+::selection{background:#d4a06a44}
+button{font-family:inherit;cursor:pointer;background:none;border:none;color:inherit}
+a{color:var(--copper);text-decoration:none}
+a:hover{text-decoration:underline}
+.chip{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:1px 5px;border-radius:2px;vertical-align:2px}
+.chip.src{color:var(--sage);border:1px solid #7dba8a55}
+.chip.mod{color:var(--iris);border:1px solid #a89ad455}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:20px;min-height:64px;padding:10px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#161910,#10120e)}
+header::before{content:'';position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--copper),#7dba8a 40%,transparent 78%);z-index:80}
+.wordmark{font-family:var(--serif);font-size:26px;letter-spacing:.18em;white-space:nowrap;line-height:1}
+.wordmark b{color:var(--copper);font-weight:400;letter-spacing:.08em}
+.lede{color:var(--dim);font-size:12.5px;max-width:540px;line-height:1.45}
+.hdr-right{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.hdr-link{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--dim)}
+.hdr-link:hover{color:var(--ink);text-decoration:none}
+.mob-toggle{display:none;font-family:var(--mono);font-size:10px;letter-spacing:.12em;border:1px solid var(--line2);padding:6px 10px;color:var(--ink)}
+.mob-toggle.on{border-color:var(--copper);color:var(--copper)}
+
+/* ---------- kpis ---------- */
+#kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.kpi{background:var(--panel);padding:12px 16px 11px}
+.kpi .k-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.kpi .k-val{font-family:var(--sans);font-weight:600;font-size:26px;letter-spacing:.01em;margin:3px 0 2px;font-variant-numeric:tabular-nums;line-height:1}
+.kpi .k-sub{font-size:11px;color:var(--dim)}
+
+/* ---------- layout ---------- */
+main{display:grid;grid-template-columns:250px minmax(0,1fr) 380px;gap:1px;background:var(--line);border-bottom:1px solid var(--line);min-height:640px}
+main>*{background:var(--panel)}
+
+#rail{padding:14px 14px 18px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.railhead{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:8px;text-transform:uppercase}
+.lens-btn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;padding:8px 9px;border:1px solid transparent;border-left:2px solid var(--line2);color:var(--dim);font-size:12.5px;margin-bottom:3px}
+.lens-btn:hover{color:var(--ink);background:var(--panel2)}
+.lens-btn.on{color:var(--ink);background:var(--panel2);border-left-color:var(--copper);border-color:var(--line)}
+.lens-btn.on small{color:var(--copper)}
+.lens-btn small{display:block;font-size:10px;color:var(--faint);margin-top:1px;font-weight:400}
+select,#search{background:var(--panel2);color:var(--ink);border:1px solid var(--line2);font-family:var(--sans);font-size:13px;padding:7px 8px;width:100%;border-radius:2px}
+#search:focus,select:focus,.in-row input:focus{outline:none;border-color:var(--copper)}
+#searchRes button{display:block;width:100%;text-align:left;padding:6px 8px;color:var(--dim);font-size:12px;border-left:2px solid transparent}
+#searchRes button:hover{color:var(--ink);background:var(--panel2);border-left-color:var(--copper)}
+.rail-note{font-size:11px;color:var(--faint);line-height:1.55}
+.rank{width:100%}
+.rank button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:5px 4px;border-bottom:1px solid var(--line);color:var(--dim);font-size:12px}
+.rank button:hover,.rank button.on{color:var(--ink);background:var(--panel2)}
+.rank .rk{font-family:var(--mono);color:var(--coral);font-size:11px;white-space:nowrap}
+
+#stage{position:relative;overflow:hidden;min-height:420px}
+#stage svg{display:block;width:100%;height:auto}
+.county{stroke:none;cursor:pointer}
+.county.dimmed{opacity:.22}
+.county.sel{stroke:var(--copper);stroke-width:2px}
+.state-mesh{fill:none;stroke:#000;stroke-opacity:.5;stroke-width:.7px;pointer-events:none}
+#tip{position:absolute;pointer-events:none;background:#131510f2;border:1px solid var(--line2);padding:9px 11px;font-size:12px;line-height:1.55;display:none;z-index:40;min-width:210px;box-shadow:0 12px 32px #0006}
+#tip .t-name{font-family:var(--serif);font-size:16px;letter-spacing:.02em}
+#legend{position:absolute;left:16px;bottom:14px;font-size:10px;color:var(--dim);font-family:var(--mono);background:#131510cc;border:1px solid var(--line);padding:8px 10px;z-index:5}
+#legend .l-title{letter-spacing:.12em;margin-bottom:5px;text-transform:uppercase}
+#stageTag{position:absolute;right:16px;top:12px;font-size:10px;color:var(--faint);letter-spacing:.12em;text-align:right;line-height:1.6;font-family:var(--mono);text-transform:uppercase}
+
+#side{padding:16px 16px 22px;overflow-y:auto}
+.d-name{font-family:var(--serif);font-size:24px;letter-spacing:.01em;line-height:1.15}
+.d-sub{color:var(--dim);font-size:11.5px;margin:4px 0 12px}
+.vs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.vs span{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px solid var(--line);padding:3px 7px}
+.vs b{color:var(--ink);font-weight:500}
+table.fact{width:100%;border-collapse:collapse;margin-bottom:12px}
+table.fact td{padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+table.fact td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px}
+.big-drag{font-family:var(--serif);font-size:36px;font-variant-numeric:tabular-nums;line-height:1;margin:2px 0 4px}
+.pos{color:var(--sage)} .neg{color:var(--coral)} .warn{color:var(--amber)}
+.bars{display:flex;flex-direction:column;gap:6px;margin:10px 0 14px}
+.bar-row{display:grid;grid-template-columns:52px 1fr 64px;gap:8px;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.bar-track{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;background:var(--copper);border-radius:99px}
+.empty{padding:8px 2px 4px}
+.empty h2{font-family:var(--serif);font-size:26px;font-weight:400;margin-bottom:8px}
+.empty p{color:var(--dim);font-size:13px;line-height:1.6;margin-bottom:12px}
+.empty ol{color:var(--dim);padding-left:18px;font-size:13px;line-height:1.7}
+
+#calc{border:1px solid var(--line2);margin-top:14px;background:var(--panel2)}
+#calc .c-head{padding:8px 12px;font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--copper);border-bottom:1px solid var(--line2);text-transform:uppercase}
+#calc .c-body{padding:12px}
+.in-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.in-row label{width:108px;font-size:11px;color:var(--dim);letter-spacing:.04em;font-family:var(--mono)}
+.in-row input{flex:1;background:var(--bg);border:1px solid var(--line2);color:var(--ink);font-family:var(--mono);font-size:13px;padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums}
+table.uw{width:100%;border-collapse:collapse;margin-top:8px}
+table.uw td,table.uw th{padding:4px 2px;font-size:12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+table.uw th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);text-align:right;font-weight:400}
+table.uw th:first-child,table.uw td:first-child{text-align:left}
+table.uw td:nth-child(2),table.uw td:nth-child(3){text-align:right;font-family:var(--mono);font-size:11.5px}
+table.uw tr.tot td{border-top:1px solid var(--line2);border-bottom:none;font-weight:600}
+#verdict{margin-top:12px;font-size:12.5px;line-height:1.6;border-left:2px solid var(--copper);padding:2px 0 2px 10px;color:var(--dim)}
+#verdict b{color:var(--ink);font-weight:600}
+
+footer{padding:36px 20px 64px;color:var(--dim);font-size:13.5px;line-height:1.7}
+.foot-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:36px;max-width:1180px}
+footer h3{font-family:var(--serif);font-size:20px;color:var(--ink);font-weight:400;margin:0 0 10px;letter-spacing:.01em}
+footer p+p{margin-top:10px}
+.meth{font-family:var(--mono);font-size:11.5px;line-height:1.7;background:var(--panel);border:1px solid var(--line);padding:12px 14px;margin-top:10px;color:var(--ink)}
+.scrim{display:none}
+
+@media (max-width:1100px){
+  header{flex-wrap:wrap;gap:10px}
+  .lede{display:none}
+  .mob-toggle{display:inline-block}
+  #kpis{grid-template-columns:repeat(5,minmax(180px,1fr));overflow-x:auto}
+  .kpi{min-width:180px}
+  main{grid-template-columns:1fr;min-height:0}
+  #rail,#side{position:fixed;top:0;bottom:0;width:min(380px,92vw);z-index:70;max-height:none;box-shadow:0 0 40px #000a}
+  #rail{left:0;transform:translateX(-105%);transition:transform .22s ease}
+  #side{right:0;transform:translateX(105%);transition:transform .22s ease}
+  #rail.open,#side.open{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:#0008;z-index:65;opacity:0;pointer-events:none;transition:opacity .2s}
+  .scrim.on{opacity:1;pointer-events:auto}
+  #stage{min-height:52vh}
+  .foot-grid{grid-template-columns:1fr;gap:28px}
+}
+@media (max-width:640px){
+  .wordmark{font-size:22px;letter-spacing:.12em}
+  .kpi .k-val{font-size:22px}
+  header{padding:10px 12px;justify-content:space-between}
+  .hdr-link,.hdr-right .chip{display:none}
+  .hdr-right{width:100%;margin-left:0;justify-content:flex-start;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">CAP<b>//</b>RATE</div>
+  <p class="lede">The insurance-adjusted cap rate map. Same house, same rent, two insurance regimes — the difference is the deal.</p>
+  <div class="hdr-right">
+    <button class="mob-toggle" id="btnRail" type="button">LENSES</button>
+    <button class="mob-toggle" id="btnSide" type="button">DEAL</button>
+    <span class="chip src">SOURCED</span>
+    <span class="chip mod">MODELED</span>
+    <a class="hdr-link" href="https://ashbybrewer.github.io/premium-map/">PREMIUM MAP</a>
+    <a class="hdr-link" href="https://github.com/ashbybrewer/cap-rate-map">GITHUB</a>
+  </div>
+</header>
+
+<div id="kpis"></div>
+<div class="scrim" id="scrim"></div>
+
+<main>
+  <nav id="rail">
+    <div>
+      <div class="railhead">Read as</div>
+      <div id="lenses"></div>
+    </div>
+    <div>
+      <div class="railhead">State</div>
+      <select id="stateSel"><option value="">All states</option></select>
+    </div>
+    <div>
+      <div class="railhead">Find a county</div>
+      <input id="search" placeholder="Miami-Dade, Cuyahoga…" autocomplete="off">
+      <div id="searchRes"></div>
+    </div>
+    <div>
+      <div class="railhead">Steepest insurance drag</div>
+      <div class="rank" id="rank"></div>
+    </div>
+    <p class="rail-note">
+      Rents: Zillow ZORI where covered (1,345 counties), HUD FY26 3-BR Fair Market Rent
+      elsewhere — basis flagged per county. Values: Zillow ZHVI. Premiums: Treasury FIO
+      2018–22 <span class="chip src">SOURCED</span>, escalated to 2025 on S&amp;P GMI
+      approved-rate anchors <span class="chip mod">MODELED</span>.
+    </p>
+  </nav>
+
+  <section id="stage">
+    <div id="tip"></div>
+    <div id="legend"></div>
+    <div id="stageTag"></div>
+  </section>
+
+  <aside id="side">
+    <div id="detail"></div>
+    <div id="calc">
+      <div class="c-head">Deal calculator — insurance-adjusted underwrite</div>
+      <div class="c-body">
+        <div class="in-row"><label>LIST PRICE $</label><input id="inPrice" inputmode="numeric"></div>
+        <div class="in-row"><label>RENT $/MO</label><input id="inRent" inputmode="numeric"></div>
+        <div id="uwOut"></div>
+        <div id="verdict"></div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <div class="foot-grid">
+    <div>
+      <h3>What this instrument shows</h3>
+      <p>
+        Investors still underwrite single-family deals with 2021-era insurance assumptions.
+        CAP//RATE re-prices every county in the FIO dataset: the same house, the same rent,
+        the same expense stack — first with its 2021 homeowners premium, then with its
+        current one. The difference is the <b>insurance drag</b>, in basis points of cap rate.
+      </p>
+      <p>
+        In most of the Midwest it is noise. On the Gulf, it is the deal. Companion to
+        <a href="https://ashbybrewer.github.io/premium-map/">The Premium Map</a>, which
+        supplies the county premium series.
+      </p>
+    </div>
+    <div>
+      <h3>Method, short form</h3>
+      <p>
+        Effective cap rate = (12 × rent − 23% operating stack
+        <span class="chip mod">MODELED</span> − county property tax at the ACS effective
+        rate <span class="chip src">SOURCED</span> − homeowners premium) ÷ ZHVI value.
+      </p>
+      <div class="meth">
+        gross = 12 × rent<br>
+        EGI = gross × (1 − 0.23)<br>
+        tax = ACS rate × value<br>
+        NOI = EGI − tax − premium<br>
+        cap = NOI ÷ value<br>
+        drag = (p₂₅ − p₂₁) ÷ value × 10,000 bps
+      </div>
+    </div>
+    <div>
+      <h3>Caveats that matter</h3>
+      <p>
+        ZHVI is a mid-tier owner index, not investor purchase prices; ZORI is asking rent;
+        FMR is a 40th-percentile rent and understates market in the 1,650 counties where it
+        is the fallback. FIO county premiums are composition-smoothed ZIP means.
+      </p>
+      <p>
+        Cap-rate <i>levels</i> are modeled estimates. The cross-county <i>differences</i>
+        and the insurance drag are the point of the instrument. Full sources, caveats, and
+        reproduction steps live in the
+        <a href="https://github.com/ashbybrewer/cap-rate-map">README</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script src="vendor/d3.v7.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="data/topology.js"></script>
+<script src="data/counties.js"></script>
+<script src="data/national.js"></script>
+<script>
+if(!window.CR || !CR.topology || !CR.counties || !CR.national){
+  document.body.innerHTML = '<div style="padding:40px;font-family:monospace;color:#e15a4a">Data modules failed to load — run pipeline/build.py</div>';
+  throw new Error('missing data');
+}
+const C = CR.counties, N = CR.national;
+const fmt$ = x => '$' + Math.round(x).toLocaleString('en-US');
+const fmtP = x => x.toFixed(2) + '%';
+
+const LENSES = {
+  cn:  {label:'Effective cap rate', hint:'After current insurance', tag:'Cap rate after current insurance',
+        mod:true, dom:[1.5,6.5], interp:t=>d3.interpolateRgbBasis(['#e15a4a','#3a3c34','#7dba8a'])(t),
+        fmt:v=>fmtP(v)},
+  c21: {label:'Cap at 2021 insurance', hint:'The number stale pro-formas still print', tag:'The number investors still use',
+        mod:true, dom:[1.5,6.5], interp:t=>d3.interpolateRgbBasis(['#e15a4a','#3a3c34','#7dba8a'])(t),
+        fmt:v=>fmtP(v)},
+  dr:  {label:'Insurance drag', hint:'Cap-rate bps lost since 2021', tag:'Cap-rate bps lost to premiums since 2021',
+        mod:true, dom:[0,80], interp:t=>d3.interpolateRgbBasis(['#1a1d16','#7a4a2a','#d4a06a','#e15a4a'])(t),
+        fmt:v=>Math.round(v)+' bps'},
+  is:  {label:'Insurance % of rent', hint:'Share of gross rent eaten by the premium', tag:'Share of gross rent eaten by the premium',
+        mod:true, dom:[4,30], interp:t=>d3.interpolateRgbBasis(['#1a1d16','#8a6a1a','#e8b86d','#e15a4a'])(t),
+        fmt:v=>v.toFixed(1)+'%'},
+  gy:  {label:'Gross yield', hint:'12 × rent ÷ value — before expenses', tag:'12 × rent ÷ value — before any expenses',
+        mod:false, dom:[4,12], interp:t=>d3.interpolateRgbBasis(['#161c22','#2a5a8a','#7aa8c9','#b7e4f4'])(t),
+        fmt:v=>fmtP(v)},
+};
+let lens='cn', stateF='', selFips=null;
+
+function readHash(){
+  const h = new URLSearchParams(location.hash.slice(1));
+  if(h.get('l') && LENSES[h.get('l')]) lens = h.get('l');
+  stateF = h.get('s') || '';
+  selFips = h.get('c') && C[h.get('c')] ? h.get('c') : null;
+  return {p: h.get('p'), r: h.get('r')};
+}
+function writeHash(){
+  const h = new URLSearchParams();
+  h.set('l', lens);
+  if(stateF) h.set('s', stateF);
+  if(selFips) h.set('c', selFips);
+  const p=+document.getElementById('inPrice').value.replace(/[^0-9]/g,'');
+  const r=+document.getElementById('inRent').value.replace(/[^0-9]/g,'');
+  if(selFips && p && p!==C[selFips].v) h.set('p', p);
+  if(selFips && r && r!==C[selFips].r) h.set('r', r);
+  history.replaceState(null,'','#'+h.toString());
+}
+
+document.getElementById('kpis').innerHTML = [
+  ['Counties priced', N.count.toLocaleString(), 'ZORI rents in '+N.zori_count.toLocaleString()+', FMR fallback elsewhere'],
+  ['Median gross yield', N.med_gy.toFixed(2)+'%', '12 × rent ÷ ZHVI value <span class="chip src">SOURCED</span>'],
+  ['Median effective cap', N.med_cn.toFixed(2)+'%', 'After current insurance <span class="chip mod">MODELED</span>'],
+  ['Median insurance drag', N.med_drag+' bps', 'Cap-rate loss vs 2021 premium <span class="chip mod">MODELED</span>'],
+  ['Median ins. % of rent', N.med_is.toFixed(1)+'%', 'Premium ÷ gross rent <span class="chip mod">MODELED</span>'],
+].map(k=>`<div class="kpi"><div class="k-label">${k[0]}</div><div class="k-val">${k[1]}</div><div class="k-sub">${k[2]}</div></div>`).join('');
+
+const lensBox = document.getElementById('lenses');
+Object.entries(LENSES).forEach(([k,L])=>{
+  const b=document.createElement('button');
+  b.className='lens-btn'; b.dataset.k=k;
+  b.innerHTML = `<span>${L.label}<small>${L.hint}</small></span><span class="chip ${L.mod?'mod':'src'}">${L.mod?'MOD':'SRC'}</span>`;
+  b.onclick=()=>{lens=k; render(); writeHash();};
+  lensBox.appendChild(b);
+});
+const states=[...new Set(Object.values(C).map(d=>d.st))].sort();
+const sSel=document.getElementById('stateSel');
+states.forEach(s=>{const o=document.createElement('option');o.value=o.textContent=s;sSel.appendChild(o);});
+sSel.onchange=()=>{stateF=sSel.value; render(); writeHash();};
+
+const rank=document.getElementById('rank');
+(N.worst_drag||[]).slice(0,8).forEach(([dr,f,n,st])=>{
+  const b=document.createElement('button');
+  b.dataset.f=f;
+  b.innerHTML=`<span>${n}, ${st}</span><span class="rk">−${dr} bps</span>`;
+  b.onclick=()=>selectCounty(f);
+  rank.appendChild(b);
+});
+
+const searchIn=document.getElementById('search'), searchRes=document.getElementById('searchRes');
+const idx=Object.entries(C).map(([f,d])=>[f,(d.n+' '+d.st).toLowerCase()]);
+searchIn.oninput=()=>{
+  const q=searchIn.value.trim().toLowerCase(); searchRes.innerHTML='';
+  if(q.length<2) return;
+  idx.filter(x=>x[1].includes(q)).slice(0,8).forEach(([f])=>{
+    const b=document.createElement('button');
+    b.textContent=C[f].n+', '+C[f].st;
+    b.onclick=()=>{selectCounty(f); searchRes.innerHTML=''; searchIn.value='';};
+    searchRes.appendChild(b);
+  });
+};
+
+const rail=document.getElementById('rail'), side=document.getElementById('side'), scrim=document.getElementById('scrim');
+function closeDrawers(){ rail.classList.remove('open'); side.classList.remove('open'); scrim.classList.remove('on');
+  document.getElementById('btnRail').classList.remove('on'); document.getElementById('btnSide').classList.remove('on'); }
+document.getElementById('btnRail').onclick=()=>{ const on=!rail.classList.contains('open'); closeDrawers(); if(on){rail.classList.add('open');scrim.classList.add('on');document.getElementById('btnRail').classList.add('on');} };
+document.getElementById('btnSide').onclick=()=>{ const on=!side.classList.contains('open'); closeDrawers(); if(on){side.classList.add('open');scrim.classList.add('on');document.getElementById('btnSide').classList.add('on');} };
+scrim.onclick=closeDrawers;
+
+const W=975,H=610;
+const svg=d3.select('#stage').insert('svg',':first-child').attr('viewBox',`0 0 ${W} ${H}`);
+const proj=d3.geoAlbersUsa().scale(1300).translate([W/2,H/2]);
+const path=d3.geoPath(proj);
+const feats=topojson.feature(CR.topology,CR.topology.objects.counties).features;
+const g=svg.append('g');
+const tip=document.getElementById('tip');
+const paths=g.selectAll('path').data(feats).join('path')
+  .attr('class','county').attr('d',path)
+  .on('mousemove',(ev,d)=>{
+    const x=C[d.id]; if(!x){tip.style.display='none';return;}
+    const L=LENSES[lens];
+    tip.style.display='block';
+    const r=document.getElementById('stage').getBoundingClientRect();
+    tip.style.left=Math.min(ev.clientX-r.left+14,r.width-220)+'px';
+    tip.style.top=(ev.clientY-r.top+10)+'px';
+    tip.innerHTML=`<div class="t-name">${x.n}, ${x.st}</div>
+      ${L.label}: <b>${L.fmt(x[lens])}</b><br>
+      value ${fmt$(x.v)} · rent ${fmt$(x.r)}/mo (${x.rb})<br>
+      cap ${fmtP(x.c21)} → <b>${fmtP(x.cn)}</b> · drag <b>${x.dr} bps</b>`;
+  })
+  .on('mouseleave',()=>tip.style.display='none')
+  .on('click',(ev,d)=>{ if(C[d.id]) selectCounty(d.id); });
+svg.append('path').attr('class','state-mesh')
+  .attr('d',path(topojson.mesh(CR.topology,CR.topology.objects.states,(a,b)=>a!==b)));
+
+function render(){
+  const L=LENSES[lens];
+  const sc=d3.scaleLinear().domain(L.dom).range([0,1]).clamp(true);
+  paths
+    .attr('fill',d=>{const x=C[d.id];return x?L.interp(sc(x[lens])):'#10120e';})
+    .classed('dimmed',d=>stateF && (!C[d.id]||C[d.id].st!==stateF))
+    .classed('sel',d=>d.id===selFips);
+  document.querySelectorAll('.lens-btn').forEach(b=>b.classList.toggle('on',b.dataset.k===lens));
+  document.querySelectorAll('#rank button').forEach(b=>b.classList.toggle('on',b.dataset.f===selFips));
+  sSel.value=stateF;
+  document.getElementById('stageTag').innerHTML=L.tag+'<br>'+(L.mod?'Modeled estimate':'Sourced ratio');
+  const stops=d3.range(0,1.01,.125).map(t=>L.interp(t));
+  document.getElementById('legend').innerHTML=
+    `<div class="l-title">${L.label}</div>
+     <div style="width:190px;height:8px;background:linear-gradient(90deg,${stops.join(',')})"></div>
+     <div style="display:flex;justify-content:space-between;width:190px"><span>${L.fmt(L.dom[0])}</span><span>${L.fmt(L.dom[1])}</span></div>`;
+}
+
+const detail=document.getElementById('detail');
+const inPrice=document.getElementById('inPrice'), inRent=document.getElementById('inRent');
+
+function emptyState(){
+  detail.innerHTML=`
+    <div class="empty">
+      <h2>Pick a county to underwrite.</h2>
+      <p>
+        Click the map, search a name, or open one of the steepest-drag counties.
+        The calculator replaces ZHVI value and market rent with your list price and rent;
+        the county tax rate and scaled premium stay attached to the place.
+      </p>
+      <ol>
+        <li>Effective cap is the headline — NOI after today’s insurance, divided by value.</li>
+        <li>Insurance drag is the silent tax: basis points of cap rate lost since 2021.</li>
+        <li>Gross yield is the only fully sourced ratio on the map.</li>
+      </ol>
+    </div>`;
+}
+
+function selectCounty(f,keepInputs){
+  selFips=f; const x=C[f];
+  if(!keepInputs){ inPrice.value=x.v.toLocaleString('en-US'); inRent.value=x.r.toLocaleString('en-US'); }
+  const cls=x.dr>=50?'neg':x.dr>=25?'warn':'pos';
+  const pMax=Math.max(x.p21,x.p22,x.p25,1);
+  const vsCap = (x.cn-N.med_cn); const vsDr = x.dr-N.med_drag;
+  detail.innerHTML=`
+    <div class="d-name">${x.n} County, ${x.st}</div>
+    <div class="d-sub">FIPS ${f} · rent basis ${x.rb==='ZORI'?'Zillow ZORI '+x.rm:'HUD FY26 3-BR FMR'} · value ZHVI ${x.vm}</div>
+    <div class="vs">
+      <span>Cap <b>${fmtP(x.cn)}</b> vs nat. ${fmtP(N.med_cn)} (${vsCap>=0?'+':''}${vsCap.toFixed(2)})</span>
+      <span>Drag <b>${x.dr} bps</b> vs nat. ${N.med_drag} (${vsDr>=0?'+':''}${vsDr})</span>
+    </div>
+    <table class="fact">
+      <tr><td>Home value (ZHVI) <span class="chip src">SRC</span></td><td>${fmt$(x.v)}</td></tr>
+      <tr><td>Market rent /mo <span class="chip src">SRC</span></td><td>${fmt$(x.r)}</td></tr>
+      <tr><td>Property-tax rate (${x.ts==='ACS'?'ACS':'fallback'}) <span class="chip ${x.ts==='ACS'?'src':'mod'}">${x.ts==='ACS'?'SRC':'MOD'}</span></td><td>${(x.tx*100).toFixed(2)}%</td></tr>
+      <tr><td>Premium 2021 <span class="chip src">SRC</span></td><td>${fmt$(x.p21)}</td></tr>
+      <tr><td>Premium 2022 <span class="chip src">SRC</span></td><td>${fmt$(x.p22)}</td></tr>
+      <tr><td>Premium 2025 <span class="chip mod">MOD</span></td><td>${fmt$(x.p25)}</td></tr>
+      <tr><td>Insurance % of gross rent</td><td>${x.is.toFixed(1)}%</td></tr>
+      <tr><td>Non-renewal rate 2023 <span class="chip src">SRC</span></td><td>${x.nr.toFixed(2)}%</td></tr>
+    </table>
+    <div class="bars">
+      ${[['2021',x.p21],['2022',x.p22],['2025',x.p25]].map(([y,p])=>`
+        <div class="bar-row"><span>${y}</span><div class="bar-track"><div class="bar-fill" style="width:${(p/pMax*100).toFixed(1)}%;background:${y==='2025'?'var(--coral)':'var(--copper)'}"></div></div><span>${fmt$(p)}</span></div>`).join('')}
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--dim)">INSURANCE DRAG SINCE 2021</div>
+    <div class="big-drag ${cls}">−${x.dr} bps</div>
+    <div style="font-size:12px;color:var(--dim)">Cap rate ${fmtP(x.c21)} at the 2021 premium → ${fmtP(x.cn)} today</div>`;
+  runCalc(); render(); writeHash();
+  if(window.matchMedia('(max-width:1100px)').matches){ closeDrawers(); side.classList.add('open'); scrim.classList.add('on'); document.getElementById('btnSide').classList.add('on'); }
+}
+
+function runCalc(){
+  const out=document.getElementById('uwOut'), verdict=document.getElementById('verdict');
+  if(!selFips){out.innerHTML='<div style="color:var(--faint);font-size:12px;padding:6px 0">Select a county to underwrite a deal.</div>';verdict.innerHTML='';return;}
+  const x=C[selFips];
+  const P=+inPrice.value.replace(/[^0-9]/g,'')||x.v;
+  const R=+inRent.value.replace(/[^0-9]/g,'')||x.r;
+  const scale=P/x.v;
+  const p21=x.p21*scale, p25=x.p25*scale;
+  const gross=12*R, opex=gross*0.23, tax=x.tx*P;
+  const noi21=gross-opex-tax-p21, noi25=gross-opex-tax-p25;
+  const c21=noi21/P*100, c25=noi25/P*100, drag=Math.round((p25-p21)/P*1e4);
+  const row=(l,a,b,cls)=>`<tr class="${cls||''}"><td>${l}</td><td>${a}</td><td>${b}</td></tr>`;
+  out.innerHTML=`<table class="uw">
+    <tr><th></th><th>2021 INS.</th><th>CURRENT</th></tr>
+    ${row('Gross rent /yr',fmt$(gross),fmt$(gross))}
+    ${row('Vac + mgmt + maint (23%) <span class="chip mod">MOD</span>','−'+fmt$(opex),'−'+fmt$(opex))}
+    ${row('Property tax <span class="chip '+(x.ts==='ACS'?'src':'mod')+'">'+(x.ts==='ACS'?'SRC':'MOD')+'</span>','−'+fmt$(tax),'−'+fmt$(tax))}
+    ${row('Insurance','−'+fmt$(p21),'−'+fmt$(p25))}
+    ${row('NOI',fmt$(noi21),fmt$(noi25),'tot')}
+    ${row('<b>Cap rate</b>','<b>'+fmtP(c21)+'</b>','<b>'+fmtP(c25)+'</b>','tot')}
+  </table>`;
+  const be=Math.ceil((p25-p21)/12/0.77);
+  verdict.innerHTML = drag>=5
+    ? `Underwritten with 2021 insurance this deal prints <b>${fmtP(c21)}</b>. At the current premium it is
+       <b>${fmtP(c25)}</b> — insurance quietly took <b>${drag} bps</b>. You would need
+       <b>+${fmt$(be)}/mo</b> of rent just to claw it back.`
+    : `Insurance drag here is <b>${drag} bps</b> — premiums are not what breaks this deal.`;
+}
+inPrice.oninput=inRent.oninput=()=>{runCalc(); writeHash();};
+
+function applyHash(){
+  const i=readHash();
+  render();
+  if(selFips){
+    const x=C[selFips];
+    inPrice.value=(+(i.p||x.v)).toLocaleString('en-US');
+    inRent.value=(+(i.r||x.r)).toLocaleString('en-US');
+    selectCounty(selFips,true);
+  } else { emptyState(); runCalc(); }
+}
+applyHash();
+window.addEventListener('hashchange',applyHash);
+</script>
+</body>
+</html>
