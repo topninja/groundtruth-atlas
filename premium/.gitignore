@@ -1,0 +1,3 @@
+# raw downloads (reproducible via pipeline/fetch.sh)
+raw/
+.DS_Store

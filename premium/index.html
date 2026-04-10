@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Premium Map — the second mortgage nobody signed</title>
+<meta name="description" content="A national instrument on the homeowners-insurance crisis: county-level premium escalation, non-renewals, insured losses, and insurer withdrawals. Every figure labeled SOURCED or MODELED.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090c; --panel:#0c1014; --panel2:#10151b; --line:#1b232e; --line2:#243040;
+  --ink:#dde6f1; --dim:#8794a6; --faint:#55617357;
+  --amber:#ffb224; --red:#ff5d5d; --teal:#37d6c0; --violet:#b78cff; --blue:#5fa8ff; --orange:#ff8a3d;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --disp:'Space Grotesk','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:12px;min-width:1180px}
+::selection{background:#ffb22433}
+button{font-family:var(--mono);cursor:pointer;background:none;border:none;color:inherit}
+a{color:var(--teal);text-decoration:none}
+a:hover{text-decoration:underline}
+.chip{display:inline-block;font-size:9px;letter-spacing:.12em;padding:1px 5px;border-radius:2px;vertical-align:1px}
+.chip.src{color:var(--teal);border:1px solid #37d6c055}
+.chip.mod{color:var(--violet);border:1px solid #b78cff55}
+.chip.cur{color:var(--amber);border:1px solid #ffb22455}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:18px;height:58px;padding:0 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0d1218,#0a0d11)}
+header::before{content:'';position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),#ff5d5d 45%,transparent 80%);z-index:60}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:.18em;white-space:nowrap}
+.wordmark b{color:var(--amber)}
+.subtitle{color:var(--dim);font-size:10px;letter-spacing:.14em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:10px;color:var(--dim);white-space:nowrap}
+
+/* ---------- KPI strip ---------- */
+#kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.kpi{background:var(--panel);padding:9px 14px 8px}
+.kpi .k-label{font-size:9px;letter-spacing:.14em;color:var(--dim)}
+.kpi .k-val{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:.02em;margin:2px 0 1px;font-variant-numeric:tabular-nums}
+.kpi .k-sub{font-size:9.5px;color:var(--dim)}
+.kpi .up{color:var(--red)} .kpi .dn{color:var(--teal)}
+
+/* ---------- main grid ---------- */
+main{display:grid;grid-template-columns:236px 1fr 336px;gap:1px;background:var(--line);border-bottom:1px solid var(--line);min-height:560px}
+main>*{background:var(--panel)}
+
+/* rail */
+#rail{padding:10px 12px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:640px}
+.railhead{font-size:9px;letter-spacing:.2em;color:var(--dim);border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:6px}
+.lens-btn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;padding:6px 8px;border:1px solid transparent;border-left:2px solid var(--line2);color:var(--dim);font-size:11px;letter-spacing:.04em;margin-bottom:2px}
+.lens-btn:hover{color:var(--ink);background:var(--panel2)}
+.lens-btn.on{color:var(--ink);background:var(--panel2);border-left-color:var(--amber)}
+.scrub-year{font-family:var(--disp);font-weight:700;font-size:30px;letter-spacing:.06em;line-height:1}
+.scrub-year .mod-mark{font-size:11px;color:var(--violet);letter-spacing:.1em;vertical-align:14px}
+.scrub-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--line2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;background:var(--amber);border-radius:0;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;background:var(--amber);border:none;border-radius:0;cursor:pointer}
+#playBtn{border:1px solid var(--line2);padding:3px 8px;color:var(--dim);font-size:10px}
+#playBtn:hover{color:var(--amber);border-color:var(--amber)}
+.tickrow{display:flex;justify-content:space-between;font-size:8.5px;color:var(--faint);margin-top:3px;color:#556173}
+.viewtog{display:flex;border:1px solid var(--line2)}
+.viewtog button{flex:1;padding:5px 0;font-size:10px;letter-spacing:.14em;color:var(--dim)}
+.viewtog button.on{background:var(--panel2);color:var(--amber)}
+select{background:var(--panel2);color:var(--ink);border:1px solid var(--line2);font-family:var(--mono);font-size:11px;padding:4px 6px;width:100%}
+#search{width:100%;background:var(--panel2);border:1px solid var(--line2);color:var(--ink);font-family:var(--mono);font-size:11px;padding:5px 8px}
+#search:focus{outline:none;border-color:var(--amber)}
+#searchRes{margin-top:2px}
+#searchRes button{display:block;width:100%;text-align:left;padding:4px 8px;color:var(--dim);font-size:10.5px;border-left:2px solid transparent}
+#searchRes button:hover,#searchRes button.hot{color:var(--ink);background:var(--panel2);border-left-color:var(--amber)}
+.story{display:block;width:100%;text-align:left;border:1px solid var(--line2);padding:6px 8px;margin-bottom:5px;color:var(--dim);font-size:10px;letter-spacing:.08em}
+.story:hover{color:var(--amber);border-color:#ffb22466}
+#storyCap{font-size:10px;color:var(--dim);line-height:1.5;border-left:2px solid var(--amber);padding:2px 0 2px 8px;margin-top:6px;display:none}
+
+/* stage */
+#stage{position:relative;overflow:hidden}
+#mapwrap,#scatterwrap{position:absolute;inset:0}
+svg{display:block}
+.county{stroke:#05070a;stroke-width:.35px}
+.county.dimmed{opacity:.14}
+.county.hovered{stroke:var(--amber);stroke-width:1.1px}
+.county.selected{stroke:#fff;stroke-width:1.2px}
+.states-mesh{fill:none;stroke:#2c3a4c;stroke-width:.7px;pointer-events:none}
+.nation-outline{fill:none;stroke:#3a495e;stroke-width:1px;pointer-events:none}
+#zoomCtl{position:absolute;top:10px;right:12px;display:flex;flex-direction:column;gap:4px;z-index:5}
+#zoomCtl button{width:26px;height:26px;border:1px solid var(--line2);background:#0c1014ee;color:var(--dim);font-size:13px}
+#zoomCtl button:hover{color:var(--amber);border-color:var(--amber)}
+#legend{position:absolute;left:14px;bottom:12px;background:#0c1014e8;border:1px solid var(--line);padding:8px 10px;z-index:5}
+#legend .l-title{font-size:9px;letter-spacing:.16em;color:var(--dim);margin-bottom:5px}
+#legend canvas{display:block}
+#legend .l-lab{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-top:3px}
+#legend .l-note{font-size:8.5px;color:#556173;margin-top:4px;max-width:210px;line-height:1.4}
+#tip{position:fixed;pointer-events:none;z-index:100;background:#0d1117f5;border:1px solid var(--line2);border-left:2px solid var(--amber);padding:7px 10px;font-size:10.5px;display:none;max-width:260px;line-height:1.55}
+#tip .t-name{font-family:var(--disp);font-weight:600;font-size:12px}
+#tip .t-dim{color:var(--dim)}
+#stageTag{position:absolute;top:10px;left:14px;z-index:5;font-size:9px;letter-spacing:.18em;color:var(--dim);background:#0c1014cc;padding:3px 7px;border:1px solid var(--line)}
+
+/* scatter */
+#scatterwrap{background:var(--panel)}
+.axis text{fill:var(--dim);font-family:var(--mono);font-size:9.5px}
+.axis line,.axis path{stroke:var(--line2)}
+.grid line{stroke:var(--line);stroke-dasharray:2 3}
+.qlabel{fill:#556173;font-size:9px;letter-spacing:.12em}
+.dot{stroke:#000;stroke-width:.4;cursor:pointer}
+.dot:hover{stroke:var(--amber);stroke-width:1.4}
+.dot.sel{stroke:#fff;stroke-width:1.6}
+
+/* dossier */
+#dossier{padding:12px 14px;overflow-y:auto;max-height:640px}
+.d-eyebrow{font-size:9px;letter-spacing:.22em;color:var(--amber)}
+.d-name{font-family:var(--disp);font-weight:700;font-size:21px;line-height:1.1;margin:2px 0 1px}
+.d-sub{font-size:10px;color:var(--dim);letter-spacing:.06em}
+.d-headrow{display:flex;align-items:flex-start}
+.d-headbtns{margin-left:auto;display:flex;gap:4px}
+.d-headbtns button{border:1px solid var(--line2);color:var(--dim);font-size:9px;letter-spacing:.1em;padding:3px 7px}
+.d-headbtns button:hover{color:var(--amber);border-color:var(--amber)}
+.d-headbtns button.pinned{color:var(--amber);border-color:var(--amber)}
+.d-fig{margin:12px 0 4px}
+.d-fig .f-val{font-family:var(--disp);font-weight:700;font-size:34px;letter-spacing:.01em;font-variant-numeric:tabular-nums;line-height:1}
+.d-fig .f-lab{font-size:9.5px;letter-spacing:.14em;color:var(--dim);margin-top:3px}
+.d-delta{font-size:10.5px;margin-top:3px}
+.d-delta .up{color:var(--red)} .d-delta .dn{color:var(--teal)}
+.d-sec{border-top:1px solid var(--line);margin-top:12px;padding-top:8px}
+.d-sec .s-title{font-size:9px;letter-spacing:.18em;color:var(--dim);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.declchips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.declchips span{font-size:9px;letter-spacing:.08em;border:1px solid var(--line2);padding:2px 6px;color:var(--dim)}
+.decl-line{font-size:10px;color:var(--dim);padding:2.5px 0;border-bottom:1px dashed #1b232e88;display:flex;gap:8px}
+.decl-line .y{color:var(--ink)} .decl-line .t{color:var(--amber);min-width:34px}
+.meter{display:flex;align-items:center;gap:8px;margin:5px 0}
+.meter .m-lab{font-size:9px;letter-spacing:.1em;color:var(--dim);width:104px}
+.meter .m-bar{flex:1;height:5px;background:var(--line);position:relative}
+.meter .m-fill{position:absolute;inset:0 auto 0 0;background:var(--amber)}
+.meter .m-val{font-size:9.5px;width:34px;text-align:right;color:var(--ink)}
+.cmp-row{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);padding:2.5px 0;border-bottom:1px dashed #1b232e88}
+.cmp-row b{color:var(--ink);font-weight:500}
+.d-note{font-size:9px;color:#556173;line-height:1.5;margin-top:6px}
+.nodata{color:#556173;font-size:10px;padding:4px 0}
+
+/* timeline */
+#timeline{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px 8px}
+.tl-titles{display:flex;gap:24px;align-items:baseline;margin-bottom:2px}
+.tl-titles .t1{font-size:9px;letter-spacing:.2em;color:var(--dim)}
+.tl-legend{margin-left:auto;font-size:9px;color:var(--dim);display:flex;gap:12px}
+.tl-legend i{display:inline-block;width:7px;height:7px;transform:rotate(45deg);margin-right:4px}
+#exitCard{position:fixed;z-index:100;background:#0d1117f7;border:1px solid var(--line2);border-left:2px solid var(--orange);padding:9px 11px;font-size:10.5px;max-width:300px;display:none;line-height:1.55;pointer-events:auto}
+#exitCard .e-co{font-family:var(--disp);font-weight:600;font-size:12.5px}
+#exitCard .e-d{color:var(--dim)}
+
+/* footer */
+footer{padding:10px 16px 26px;color:var(--dim);font-size:10px}
+.f-row{display:flex;align-items:center;gap:14px}
+#methBtn{border:1px solid var(--line2);padding:5px 10px;letter-spacing:.14em;font-size:9.5px;color:var(--dim)}
+#methBtn:hover{color:var(--amber);border-color:var(--amber)}
+#meth{display:none;margin-top:12px;border:1px solid var(--line);background:var(--panel2);padding:14px 16px;line-height:1.65;max-width:1100px}
+#meth.open{display:block}
+#meth h3{font-family:var(--disp);font-size:12px;letter-spacing:.14em;margin:10px 0 4px;color:var(--ink)}
+#meth h3:first-child{margin-top:0}
+#meth p{margin:4px 0;color:var(--dim)}
+#meth table{border-collapse:collapse;margin:6px 0;width:100%}
+#meth td,#meth th{border:1px solid var(--line);padding:5px 8px;font-size:10px;text-align:left;color:var(--dim);vertical-align:top}
+#meth th{color:var(--ink);font-weight:500;letter-spacing:.08em}
+kbd{border:1px solid var(--line2);padding:0 4px;border-radius:2px;font-size:9.5px;color:var(--ink)}
+.err{padding:30px;color:var(--red);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark">THE <b>PREMIUM</b> MAP</div>
+  <div class="subtitle">HOMEOWNERS INSURANCE · THE SECOND MORTGAGE NOBODY SIGNED · 3,142 COUNTIES · 2018–2025ᴱ</div>
+  <div class="hdr-right">
+    <span class="chip src">SOURCED</span><span>= public record</span>
+    <span class="chip mod">MODELED</span><span>= our estimate, method shown</span>
+  </div>
+</header>
+
+<div id="kpis"></div>
+
+<main>
+  <aside id="rail">
+    <div>
+      <div class="railhead">LENS</div>
+      <div id="lensBtns"></div>
+    </div>
+    <div>
+      <div class="railhead">YEAR</div>
+      <div class="scrub-year" id="yearLab">2022</div>
+      <div class="scrub-row">
+        <button id="playBtn" title="play [space]">▶</button>
+        <input type="range" id="scrub" min="0" max="4" value="4" step="1">
+      </div>
+      <div class="tickrow" id="tickrow"></div>
+    </div>
+    <div>
+      <div class="railhead">VIEW</div>
+      <div class="viewtog">
+        <button id="vMap" class="on">MAP</button>
+        <button id="vSct">FRONTIER</button>
+      </div>
+      <div style="height:8px"></div>
+      <select id="stateSel"><option value="">ALL STATES</option></select>
+    </div>
+    <div>
+      <div class="railhead">FIND COUNTY <span style="float:right;color:#556173">[/]</span></div>
+      <input id="search" placeholder="type a county…" autocomplete="off">
+      <div id="searchRes"></div>
+    </div>
+    <div>
+      <div class="railhead">STORIES</div>
+      <div id="stories"></div>
+      <div id="storyCap"></div>
+    </div>
+  </aside>
+
+  <section id="stage">
+    <div id="mapwrap">
+      <div id="stageTag">INSTRUMENT I · COUNTY CHOROPLETH</div>
+      <svg id="map" role="img" aria-label="US county map"></svg>
+      <div id="zoomCtl">
+        <button id="zin" aria-label="zoom in">+</button>
+        <button id="zout" aria-label="zoom out">−</button>
+        <button id="zreset" aria-label="reset view">⌂</button>
+      </div>
+      <div id="legend">
+        <div class="l-title" id="legTitle"></div>
+        <canvas id="legCanvas" width="220" height="10"></canvas>
+        <div class="l-lab"><span id="legMin"></span><span id="legMid"></span><span id="legMax"></span></div>
+        <div class="l-note" id="legNote"></div>
+      </div>
+    </div>
+    <div id="scatterwrap" hidden>
+      <div class="stageTag2" style="position:absolute;top:10px;left:14px;z-index:5;font-size:9px;letter-spacing:.18em;color:var(--dim);background:#0c1014cc;padding:3px 7px;border:1px solid var(--line)">INSTRUMENT II · THE REPRICING FRONTIER</div>
+      <svg id="scatter"></svg>
+    </div>
+  </section>
+
+  <aside id="dossier"></aside>
+</main>
+
+<section id="timeline">
+  <div class="tl-titles">
+    <span class="t1">FEDERAL DISASTER LEDGER · NOAA BILLION-DOLLAR EVENTS · CPI-ADJUSTED $B <span class="chip src">SOURCED</span></span>
+    <span class="t1" style="margin-left:26px">MARKET EXITS & SHOCKS 2021–2026 · curated, click for source</span>
+    <span class="tl-legend" id="tlLegend"></span>
+  </div>
+  <svg id="tl" width="100%" height="150"></svg>
+</section>
+
+<footer>
+  <div class="f-row">
+    <button id="methBtn">METHODOLOGY & SOURCES ▾</button>
+    <span>Every figure on this instrument is tagged <span class="chip src">SOURCED</span> or <span class="chip mod">MODELED</span>. No exceptions.</span>
+    <span style="margin-left:auto">Built by William Brewer · public data, labeled honestly</span>
+  </div>
+  <div id="meth"></div>
+</footer>
+
+<div id="tip"></div>
+<div id="exitCard"></div>
+
+<script src="vendor/d3.v7.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="data/topology.js"></script>
+<script src="data/counties.js"></script>
+<script src="data/national.js"></script>
+<script>
+(function(){
+'use strict';
+if(!window.PM || !PM.topology || !PM.counties || !PM.national){
+  document.body.innerHTML = '<div class="err">Data modules failed to load. Serve this folder or open index.html directly with data/*.js present.</div>';
+  return;
+}
+const C = PM.counties, N = PM.national;
+const fmt$ = d3.format('$,.0f'), fmtS = d3.format('+,.1%'), fmt1 = d3.format(',.1f');
+const pc  = v => v==null?'—':(100*v).toFixed(2)+'%';
+const pc1 = v => v==null?'—':(100*v).toFixed(1)+'%';
+const money = v => v==null?'—':fmt$(v);
+const GK = ['hur','fire','storm','flood','winter','other'];
+const GLAB = {hur:'HUR',fire:'FIRE',storm:'STM',flood:'FLD',winter:'WTR',other:'OTH'};
+const KIND = {insolvency:{c:'#ff5d5d',lab:'insolvency'},exit:{c:'#ff8a3d',lab:'exit / mass nonrenewal'},
+              pause:{c:'#ffb224',lab:'new-business pause'},rate:{c:'#b78cff',lab:'emergency rate'},thaw:{c:'#37d6c0',lab:'thaw'}};
+
+/* ---------------- lenses ---------------- */
+const ramps = {
+ warm: d3.interpolateRgbBasis(['#0b1c29','#14405c','#2e6f6d','#87a24b','#e8b73c','#ff8a3d','#ff4d5e']),
+ red:  d3.interpolateRgbBasis(['#111823','#3a2233','#7c2d3e','#c23a3a','#ff5d5d','#ffb3a0']),
+ blue: d3.interpolateRgbBasis(['#0d1520','#173659','#1f5f8f','#2b93c9','#63c8f0']),
+ mag:  d3.interpolateRgbBasis(['#111322','#3b2352','#7c2d6e','#c23a67','#ff6a4d','#ffc46b'])
+};
+const YRS_P = [2018,2019,2020,2021,2022,2023,2024,2025];
+const LENSES = [
+ {id:'prem', lab:'PREMIUM / POLICY', tag:'src', years:YRS_P, modFrom:5, ramp:ramps.warm,
+  get:(o,yi)=> yi<5 ? (o.p?o.p[yi]:null) : (o.m?o.m[yi-5]:null),
+  fmt:money, leg:'AVG ANNUAL PREMIUM PER POLICY',
+  note:yi=> yi>=5 ? 'MODELED: 2022 county premium × S&P national approved-rate anchors (+12.7% ’23, +10.4% ’24, +6.0% ’25).'
+                  : 'SOURCED: Treasury FIO/NAIC PCMI public subset, ZIP→county decile-weighted.'},
+ {id:'gw', lab:'ESCALATION ’18→’22', tag:'src', years:null, ramp:null, diverging:true,
+  get:o=> o.gw==null?null:o.gw, fmt:v=>v==null?'—':(v>0?'+':'')+v.toFixed(1)+'%',
+  leg:'PREMIUM GROWTH 2018→2022', note:()=>'SOURCED: change in FIO PCMI premium/policy. National subset average ≈ +7.5% (composition-smoothed; see methodology).'},
+ {id:'nr', lab:'NON-RENEWAL RATE', tag:'src', years:[2018,2019,2020,2021,2022,2023], ramp:ramps.red,
+  get:(o,yi)=> o.nr?o.nr[yi]:null, fmt:pc, leg:'SHARE OF POLICIES NON-RENEWED',
+  note:()=>'SOURCED: Senate Budget Committee county data (insurers ≈65% of national market).'},
+ {id:'lr', lab:'PAID LOSS RATIO', tag:'src', years:[2018,2019,2020,2021,2022], ramp:ramps.mag,
+  get:(o,yi)=> o.lr?o.lr[yi]:null, fmt:v=>v==null?'—':v.toFixed(2)+'×', leg:'LOSSES PAID ÷ WRITTEN PREMIUM',
+  note:()=>'SOURCED: FIO PCMI. Above 1.0× an insurer paid out more than it collected — the precondition for repricing.'},
+ {id:'cf', lab:'CLAIM FREQUENCY', tag:'src', years:[2018,2019,2020,2021,2022], ramp:ramps.blue,
+  get:(o,yi)=> o.cf?o.cf[yi]:null, fmt:pc1, leg:'PAID CLAIMS PER POLICY IN FORCE',
+  note:()=>'SOURCED: FIO PCMI. Where weather actually lands on rooftops.'},
+ {id:'dx', lab:'REPRICING INDEX', tag:'mod', years:null, ramp:ramps.mag,
+  get:o=> o.dx==null?null:o.dx, fmt:v=>v==null?'—':v.toFixed(0), leg:'COMPOSITE REPRICING PRESSURE 0–100',
+  note:()=>'MODELED: percentile blend — 35% premium escalation, 25% 2023 non-renewal, 20% loss ratio, 20% disaster declarations 2021+.'}
+];
+
+/* ---------------- state ---------------- */
+const S = { lens:'prem', yi:4, fips:null, view:'map', st:'', pin:null, playing:null };
+function readHash(){
+  const h = new URLSearchParams(location.hash.slice(1));
+  S.lens='prem'; S.fips=null; S.st=''; S.view='map';          // defaults, then overrides
+  if(h.get('l') && LENSES.find(x=>x.id===h.get('l'))) S.lens = h.get('l');
+  if(h.get('f') && C[h.get('f')]) S.fips = h.get('f');
+  if(h.get('s')) S.st = h.get('s');
+  if(h.get('v')==='sct') S.view='sct';
+  const L = LENSES.find(x=>x.id===S.lens);
+  S.yi = L.years ? (L.modFrom!=null ? L.modFrom-1 : L.years.length-1) : 0;  // default: latest sourced year
+  if(h.get('y') && L.years){ const i = L.years.indexOf(+h.get('y')); if(i>=0) S.yi = i; }
+}
+readHash();
+function writeHash(){
+  const L = lens();
+  const p = new URLSearchParams();
+  p.set('l',S.lens); if(L.years) p.set('y',L.years[S.yi]);
+  if(S.fips) p.set('f',S.fips); if(S.st) p.set('s',S.st); if(S.view==='sct') p.set('v','sct');
+  history.replaceState(null,'','#'+p.toString());
+}
+const lens = () => LENSES.find(x=>x.id===S.lens);
+
+/* ---------------- value + scale caches ---------------- */
+const FIPS = Object.keys(C);
+const valCache = {}, scaleCache = {};
+function valuesFor(lid, yi){
+  const key = lid+':'+(yi||0);
+  if(valCache[key]) return valCache[key];
+  const L = LENSES.find(x=>x.id===lid);
+  const m = new Map();
+  for(const f of FIPS){ const v = L.get(C[f], yi); if(v!=null && isFinite(v)) m.set(f,v); }
+  return valCache[key] = m;
+}
+function scaleFor(lid, yi){
+  const key = lid+':'+(yi||0);
+  if(scaleCache[key]) return scaleCache[key];
+  const L = LENSES.find(x=>x.id===lid);
+  const vals = Array.from(valuesFor(lid,yi).values()).sort(d3.ascending);
+  let sc;
+  if(L.diverging){
+    const lo = d3.quantileSorted(vals,.02), hi = d3.quantileSorted(vals,.98);
+    const neg = t=>d3.interpolateRgb('#5fa8ff','#16202c')(t), pos = d3.interpolateRgbBasis(['#16202c','#8a6a2a','#ffb224','#ff6a3d','#ff3d55']);
+    sc = v => v<0 ? neg(Math.min(1, v/(lo||-1))) : pos(Math.min(1, v/(hi||1)));
+    sc.dom = [lo,0,hi]; sc.diverging = true;
+  } else {
+    const lo = d3.quantileSorted(vals,.02), hi = d3.quantileSorted(vals,.98);
+    const s = d3.scaleSequential(L.ramp).domain([lo,hi]).clamp(true);
+    sc = v => s(v); sc.dom = [lo,(lo+hi)/2,hi];
+  }
+  return scaleCache[key] = sc;
+}
+
+/* ---------------- geometry ---------------- */
+const W = 975, H = 610;   // us-atlas pre-projected frame
+const svg = d3.select('#map').attr('viewBox',[0,0,W,H]);
+const gRoot = svg.append('g');
+const counties = topojson.feature(PM.topology, PM.topology.objects.counties).features
+  .filter(f => C[f.id] || (+f.id.slice(0,2) < 60));
+const proj = d3.geoAlbersUsa().scale(1300).translate([W/2, H/2]);
+const path = d3.geoPath(proj);           // topology arrives in lon/lat; project to the 975×610 frame
+const statesMesh = topojson.mesh(PM.topology, PM.topology.objects.states, (a,b)=>a!==b);
+const nationMesh = topojson.mesh(PM.topology, PM.topology.objects.nation);
+const cPaths = gRoot.append('g').selectAll('path').data(counties).join('path')
+  .attr('class','county').attr('d', path)
+  .on('mousemove', onCountyMove).on('mouseleave', hideTip)
+  .on('click', (e,d)=>{ selectCounty(S.fips===d.id?null:d.id); });
+gRoot.append('path').datum(statesMesh).attr('class','states-mesh').attr('d',path);
+gRoot.append('path').datum(nationMesh).attr('class','nation-outline').attr('d',path);
+const zoom = d3.zoom().scaleExtent([1,9]).on('zoom', ev=>{
+  gRoot.attr('transform', ev.transform);
+  gRoot.selectAll('.county').attr('stroke-width', .35/ev.transform.k);
+  gRoot.select('.states-mesh').attr('stroke-width', .7/ev.transform.k);
+});
+svg.call(zoom).on('dblclick.zoom', null);
+d3.select('#zin').on('click', ()=>svg.transition().duration(280).call(zoom.scaleBy,1.6));
+d3.select('#zout').on('click', ()=>svg.transition().duration(280).call(zoom.scaleBy,.62));
+d3.select('#zreset').on('click', ()=>{ svg.transition().duration(420).call(zoom.transform, d3.zoomIdentity); });
+function zoomToFeature(f, pad=2.2){
+  const b = path.bounds(f);
+  const k = Math.max(1, Math.min(9, .9/Math.max((b[1][0]-b[0][0])/W,(b[1][1]-b[0][1])/H)/pad*2.2));
+  const tx = W/2 - k*(b[0][0]+b[1][0])/2, ty = H/2 - k*(b[0][1]+b[1][1])/2;
+  svg.transition().duration(650).call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(k));
+}
+function zoomToState(st){
+  const fs = counties.filter(f => (C[f.id]||{}).st===st);
+  if(!fs.length) return;
+  zoomToFeature({type:'FeatureCollection',features:fs}, 1.15);
+}
+
+/* ---------------- painting ---------------- */
+const MISS = '#0e1319';
+function paint(){
+  const L = lens(), yi = S.yi, vals = valuesFor(L.id, L.years?yi:0), sc = scaleFor(L.id, L.years?yi:0);
+  cPaths.attr('fill', d=>{ const v = vals.get(d.id); return v==null?MISS:sc(v); })
+        .classed('dimmed', d=> S.st && (C[d.id]||{}).st!==S.st)
+        .classed('selected', d=> d.id===S.fips);
+  paintLegend(L, sc, yi);
+  renderRail(); renderDossier(); writeHash();
+  if(S.view==='sct') paintScatter();
+}
+function paintLegend(L, sc, yi){
+  d3.select('#legTitle').html(L.leg + ' <span class="chip '+(L.years&&yi>=(L.modFrom||99)?'mod':L.tag)+'">'+
+    (L.years&&yi>=(L.modFrom||99)?'MODELED':L.tag==='src'?'SOURCED':'MODELED')+'</span>');
+  const cv = document.getElementById('legCanvas'), cx = cv.getContext('2d');
+  for(let i=0;i<220;i++){
+    const t = i/219;
+    let col;
+    if(sc.diverging){ const [lo,,hi]=sc.dom; const v = lo + t*(hi-lo); col = sc(v); }
+    else { const [lo,,hi]=sc.dom; col = sc(lo + t*(hi-lo)); }
+    cx.fillStyle = col; cx.fillRect(i,0,1,10);
+  }
+  const [lo,mid,hi] = sc.dom;
+  d3.select('#legMin').text(L.fmt(lo)); d3.select('#legMid').text(sc.diverging?'0':L.fmt(mid)); d3.select('#legMax').text(L.fmt(hi)+'+');
+  d3.select('#legNote').text(L.note(yi) + '  ·  Dark cells: suppressed below public-release thresholds.');
+}
+
+/* ---------------- tooltip ---------------- */
+const tip = d3.select('#tip');
+function onCountyMove(e,d){
+  const o = C[d.id]; const L = lens();
+  let html;
+  if(!o){ html = '<span class="t-dim">No public data — suppressed below reporting thresholds.</span>'; }
+  else{
+    const v = L.get(o, L.years?S.yi:0);
+    html = '<div class="t-name">'+o.n+', '+o.st+'</div>'+
+      '<span class="t-dim">'+L.lab+(L.years?' · '+L.years[S.yi]:'')+'</span><br>'+
+      '<b style="font-size:13px">'+L.fmt(v)+'</b><br>'+
+      '<span class="t-dim">prem ’22 '+(o.p?money(o.p[4]):'—')+
+      ' · nonren ’23 '+(o.nr?pc(o.nr[5]):'—')+
+      ' · decl 5yr '+(o.dr?o.dr.l5:'0')+'</span>';
+  }
+  tip.style('display','block').html(html)
+     .style('left',(e.clientX+14)+'px').style('top',(e.clientY+12)+'px');
+  cPaths.classed('hovered', x=>x.id===d.id);
+}
+function hideTip(){ tip.style('display','none'); cPaths.classed('hovered',false); }
+
+/* ---------------- rail ---------------- */
+function renderRail(){
+  const L = lens();
+  const btns = d3.select('#lensBtns').selectAll('button').data(LENSES, d=>d.id);
+  btns.enter().append('button').attr('class','lens-btn')
+      .html(d=>d.lab+' <span class="chip '+d.tag+'">'+(d.tag==='src'?'SRC':'MOD')+'</span>')
+      .on('click', (e,d)=>{ S.lens=d.id; S.yi = d.years? Math.min(S.yi,d.years.length-1) : 0; if(d.id==='prem') S.yi=Math.min(S.yi,7); paint(); })
+    .merge(btns).classed('on', d=>d.id===S.lens);
+  const sc = document.getElementById('scrub');
+  if(L.years){
+    sc.disabled=false; sc.max = L.years.length-1; sc.value = S.yi;
+    const y = L.years[S.yi], mod = L.modFrom!=null && S.yi>=L.modFrom;
+    d3.select('#yearLab').html(y + (mod?'<span class="mod-mark"> ᴹᴼᴰ</span>':''));
+    d3.select('#tickrow').html(L.years.map((yy,i)=>'<span style="'+(L.modFrom!=null&&i>=L.modFrom?'color:#b78cff88':'')+'">'+String(yy).slice(2)+'</span>').join(''));
+  } else {
+    sc.disabled=true;
+    d3.select('#yearLab').html(L.id==='gw'?'’18→’22':'2018–23');
+    d3.select('#tickrow').html('');
+  }
+}
+d3.select('#scrub').on('input', function(){ S.yi = +this.value; paint(); });
+d3.select('#playBtn').on('click', togglePlay);
+function togglePlay(){
+  const L = lens();
+  if(S.playing){ clearInterval(S.playing); S.playing=null; d3.select('#playBtn').text('▶'); return; }
+  if(!L.years) return;
+  d3.select('#playBtn').text('❚❚');
+  S.playing = setInterval(()=>{ S.yi = (S.yi+1)%L.years.length; paint(); }, 900);
+}
+
+/* view toggle + state filter */
+d3.select('#vMap').on('click', ()=>setView('map'));
+d3.select('#vSct').on('click', ()=>setView('sct'));
+function setView(v){
+  S.view=v;
+  d3.select('#vMap').classed('on',v==='map'); d3.select('#vSct').classed('on',v==='sct');
+  d3.select('#mapwrap').attr('hidden', v==='sct'?true:null);
+  d3.select('#scatterwrap').attr('hidden', v==='map'?true:null);
+  document.getElementById('mapwrap').style.display = v==='sct'?'none':'';
+  document.getElementById('scatterwrap').style.display = v==='sct'?'':'none';
+  if(v==='sct') paintScatter();
+  writeHash();
+}
+const sts = [...new Set(FIPS.map(f=>C[f].st))].sort();
+d3.select('#stateSel').selectAll('option.st').data(sts).enter().append('option').attr('class','st').attr('value',d=>d).text(d=>d);
+document.getElementById('stateSel').value = S.st;
+d3.select('#stateSel').on('change', function(){ S.st=this.value; if(S.st) zoomToState(S.st); else d3.select('#zreset').node().click(); paint(); });
+
+/* ---------------- search ---------------- */
+const entries = FIPS.map(f=>({f, n:C[f].n, st:C[f].st, s:(C[f].n+' '+C[f].st).toLowerCase()}));
+const sr = d3.select('#searchRes');
+d3.select('#search').on('input', function(){
+  const q = this.value.trim().toLowerCase();
+  if(q.length<2){ sr.html(''); return; }
+  const hits = entries.filter(e=>e.s.includes(q)).slice(0,8);
+  const b = sr.selectAll('button').data(hits, d=>d.f);
+  b.enter().append('button').merge(b).text(d=>d.n+', '+d.st)
+    .on('click',(e,d)=>{ selectCounty(d.f, true); sr.html(''); document.getElementById('search').value=''; });
+  b.exit().remove();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='/' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); document.getElementById('search').focus(); }
+  if(e.key===' ' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); togglePlay(); }
+  if(e.key==='Escape'){ selectCounty(null); }
+  if((e.key==='ArrowRight'||e.key==='ArrowLeft') && lens().years && document.activeElement.tagName!=='INPUT'){
+    S.yi = Math.max(0, Math.min(lens().years.length-1, S.yi + (e.key==='ArrowRight'?1:-1))); paint();
+  }
+});
+
+/* ---------------- stories ---------------- */
+const STORIES = [
+ {lab:'▸ THE FLORIDA SQUEEZE', cap:'Nine Florida insurers failed 2021–23. By 2023 Miami-Dade’s non-renewal rate hit 4.3% — among the nation’s highest. SOURCED: Senate data, FIGA.',
+  go:()=>{ S.lens='nr'; S.yi=5; S.st='FL'; zoomToState('FL'); }},
+ {lab:'▸ WILDFIRE REPRICING', cap:'Lake, Trinity, Mariposa, El Dorado and Plumas counties top the national Repricing Index — the exact geography of State Farm’s 2024 nonrenewals. MODELED composite.',
+  go:()=>{ S.lens='dx'; S.st='CA'; zoomToState('CA'); }},
+ {lab:'▸ THE GULF PREMIUM WALL', cap:'The coast already pays: Miami-Dade ≈ $11.2k, Orleans Parish ≈ $4.6k average premium in 2022 vs ≈ $1.8k nationally. SOURCED: FIO PCMI.',
+  go:()=>{ S.lens='prem'; S.yi=4; S.st=''; d3.select('#zreset').node().click(); }},
+ {lab:'▸ THE NOWCAST', cap:'Roll the scrubber past 2022 and the map turns violet: county premiums projected on S&P’s approved-rate anchors (+12.7%, +10.4%, +6.0%). MODELED.',
+  go:()=>{ S.lens='prem'; S.yi=7; S.st=''; d3.select('#zreset').node().click(); }}
+];
+d3.select('#stories').selectAll('button').data(STORIES).enter().append('button')
+  .attr('class','story').text(d=>d.lab)
+  .on('click',(e,d)=>{ d.go(); document.getElementById('stateSel').value=S.st; d3.select('#storyCap').style('display','block').text(d.cap); paint(); });
+
+/* ---------------- KPI strip ---------------- */
+(function kpis(){
+  const p18=N.prem[0], p22=N.prem[4], e25=N.premE[2];
+  const nr18=N.nr[0], nr23=N.nr[5];
+  const noaa5 = N.noaa.series.filter(d=>d.y>=2020);
+  const cost5 = d3.sum(noaa5,d=>d.c), n5 = d3.sum(noaa5,d=>d.n);
+  const cards = [
+   {l:'AVG PREMIUM / POLICY · 2022', v:money(p22), s:'<span class="up">▲ '+((p22/p18-1)*100).toFixed(1)+'%</span> vs 2018 · FIO PCMI subset', tag:'src'},
+   {l:'EST. PREMIUM / POLICY · 2025', v:money(e25), s:'S&P approved-rate anchors → <span class="up">▲ '+((e25/p22-1)*100).toFixed(0)+'%</span> vs ’22', tag:'mod'},
+   {l:'NON-RENEWAL RATE · 2023', v:pc(nr23), s:'<span class="up">▲</span> from '+pc(nr18)+' in 2018 · Senate data', tag:'src'},
+   {l:'BILLION-$ DISASTERS · 2020–24', v:n5+' <span style="font-size:13px;color:var(--dim)">events</span>', s:'$'+fmt1(cost5)+'B CPI-adj · final federal ledger', tag:'src'},
+   {l:'MARKET EXITS & SHOCKS TRACKED', v:String(N.exits.length), s:'insolvencies · exits · pauses · 2021–2026', tag:'src'}
+  ];
+  d3.select('#kpis').selectAll('div').data(cards).enter().append('div').attr('class','kpi')
+    .html(d=>'<div class="k-label">'+d.l+' <span class="chip '+d.tag+'">'+(d.tag==='src'?'SOURCED':'MODELED')+'</span></div>'+
+             '<div class="k-val">'+d.v+'</div><div class="k-sub">'+d.s+'</div>');
+})();
+
+/* ---------------- dossier ---------------- */
+function selectCounty(f, zoomTo){
+  S.fips = f;
+  cPaths.classed('selected', d=>d.id===S.fips);
+  if(f && zoomTo){ const feat = counties.find(x=>x.id===f); if(feat) zoomToFeature(feat, 3); }
+  renderDossier(); writeHash();
+  if(S.view==='sct') d3.selectAll('.dot').classed('sel', d=>d.f===S.fips);
+}
+function spark(sel, ys, series, opts){
+  const w=opts.w||300, h=opts.h||64, pad=4;
+  const s = sel.append('svg').attr('width',w).attr('height',h);
+  const flat = series.flatMap(q=>q.v).filter(v=>v!=null);
+  if(!flat.length){ sel.append('div').attr('class','nodata').text('no public data'); return; }
+  const x = d3.scalePoint().domain(ys).range([pad+2,w-pad-2]);
+  const y = d3.scaleLinear().domain([d3.min(flat)*.96, d3.max(flat)*1.04]).range([h-pad-10,pad]);
+  const line = d3.line().defined(v=>v!=null).x((v,i)=>x(ys[i])).y(v=>y(v));
+  for(const q of series){
+    if(q.area){
+      const ar = d3.area().defined(v=>v!=null).x((v,i)=>x(ys[i])).y0(h-pad-10).y1(v=>y(v));
+      s.append('path').attr('d',ar(q.v)).attr('fill',q.c+'22');
+    }
+    s.append('path').attr('d',line(q.v)).attr('fill','none')
+     .attr('stroke',q.c).attr('stroke-width',q.wd||1.6).attr('stroke-dasharray',q.dash||null);
+  }
+  const lab = s.append('g').attr('font-size',8.5).attr('fill','#8794a6').attr('font-family','var(--mono)');
+  lab.append('text').attr('x',pad+2).attr('y',h-1).text(ys[0]);
+  lab.append('text').attr('x',w-pad-2).attr('y',h-1).attr('text-anchor','end').text(ys[ys.length-1]);
+  if(opts.maxLab){
+    const mv = d3.max(flat);
+    lab.append('text').attr('x',w-pad-2).attr('y',pad+7).attr('text-anchor','end').attr('fill','#dde6f1').text(opts.fmt(mv));
+  }
+}
+function bars(sel, ys, vals, opts){
+  const w=opts.w||300, h=opts.h||58, pad=2, bw=(w-2*pad)/ys.length-3;
+  const s = sel.append('svg').attr('width',w).attr('height',h);
+  const flat = vals.filter(v=>v!=null);
+  if(!flat.length){ sel.append('div').attr('class','nodata').text('no public data'); return; }
+  const top = Math.max(d3.max(flat), opts.ref||0)*1.12;
+  const y = d3.scaleLinear().domain([0,top]).range([h-12,2]);
+  vals.forEach((v,i)=>{
+    if(v==null) return;
+    const xx = pad+i*((w-2*pad)/ys.length);
+    s.append('rect').attr('x',xx).attr('y',y(v)).attr('width',bw).attr('height',h-12-y(v))
+     .attr('fill', opts.color(v,i));
+    s.append('text').attr('x',xx+bw/2).attr('y',h-2).attr('text-anchor','middle')
+     .attr('font-size',8).attr('fill','#8794a6').text(String(ys[i]).slice(2));
+  });
+  if(opts.ref!=null){
+    s.append('line').attr('x1',pad).attr('x2',w-pad).attr('y1',y(opts.ref)).attr('y2',y(opts.ref))
+     .attr('stroke',opts.refC||'#8794a6').attr('stroke-dasharray','3 3').attr('stroke-width',.8);
+    s.append('text').attr('x',w-pad).attr('y',y(opts.ref)-2).attr('text-anchor','end').attr('font-size',8).attr('fill',opts.refC||'#8794a6').text(opts.refLab||'');
+  }
+}
+function renderDossier(){
+  const el = d3.select('#dossier'); el.html('');
+  const o = S.fips ? C[S.fips] : null;
+  const L = lens();
+  const head = el.append('div').attr('class','d-headrow');
+  const hl = head.append('div');
+  hl.append('div').attr('class','d-eyebrow').text(o?'COUNTY DOSSIER':'NATIONAL INSTRUMENT');
+  hl.append('div').attr('class','d-name').text(o? o.n+', '+o.st : 'United States');
+  hl.append('div').attr('class','d-sub').text(o? 'FIPS '+S.fips+(o.pf?' · '+d3.format(',')(o.pf)+' policies in force ’23':'') : '3,142 counties · public record, assembled');
+  const hb = head.append('div').attr('class','d-headbtns');
+  if(o){
+    hb.append('button').attr('class', S.pin===S.fips?'pinned':null).text(S.pin===S.fips?'PINNED':'PIN')
+      .on('click',()=>{ S.pin = S.pin===S.fips?null:S.fips; renderDossier(); });
+    hb.append('button').text('✕').on('click',()=>selectCounty(null));
+  } else if(S.pin){
+    hb.append('button').text('UNPIN '+(C[S.pin].n)).on('click',()=>{S.pin=null;renderDossier();});
+  }
+
+  /* headline figure = current lens value */
+  const src = o || {p:N.prem, m:N.premE, nr:N.nr, lr:N.lr, cf:N.cf, gw:(N.prem[4]/N.prem[0]-1)*100, dx:null};
+  const v = L.get(src, L.years?S.yi:0);
+  const fig = el.append('div').attr('class','d-fig');
+  fig.append('div').attr('class','f-val').text(L.fmt(v));
+  fig.append('div').attr('class','f-lab').html(L.lab+(L.years?' · '+L.years[S.yi]:'')+' <span class="chip '+(L.years&&L.modFrom!=null&&S.yi>=L.modFrom?'mod':L.tag)+'">'+((L.years&&L.modFrom!=null&&S.yi>=L.modFrom)||L.tag==='mod'?'MODELED':'SOURCED')+'</span>');
+  if(src.p && src.p[0]!=null && src.p[4]!=null){
+    const d = (src.p[4]/src.p[0]-1)*100;
+    fig.append('div').attr('class','d-delta').html('premium ’18→’22 <span class="'+(d>=0?'up':'dn')+'">'+(d>0?'▲ +':'▼ ')+d.toFixed(1)+'%</span>'+
+      (src.m?' · est. ’25 <b>'+money(src.m[2])+'</b> <span class="chip mod">MOD</span>':''));
+  }
+
+  /* premium trajectory */
+  const s1 = el.append('div').attr('class','d-sec');
+  s1.append('div').attr('class','s-title').html('<span>PREMIUM TRAJECTORY 2018–2025ᴱ</span><span><span class="chip src">SRC</span> <span class="chip mod">MOD ’23+</span></span>');
+  const ys8 = [2018,2019,2020,2021,2022,2023,2024,2025];
+  const pv = src.p? src.p.concat(src.m||[null,null,null]) : null;
+  const wrap1 = s1.append('div');
+  if(pv){
+    const solid = pv.map((x,i)=>i<5?x:null), dash = pv.map((x,i)=>i>=4?x:null);
+    spark(wrap1, ys8, [
+      {v:solid, c:'#ffb224', area:true, wd:1.8},
+      {v:dash, c:'#b78cff', dash:'4 3', wd:1.6},
+      ...(S.pin && S.pin!==S.fips && C[S.pin].p ? [{v:C[S.pin].p.concat(C[S.pin].m||[]), c:'#55617388', wd:1.2}] : [])
+    ], {fmt:money, maxLab:true});
+    if(S.pin && S.pin!==S.fips) s1.append('div').attr('class','d-note').text('grey: pinned '+C[S.pin].n+', '+C[S.pin].st);
+  } else wrap1.append('div').attr('class','nodata').text('premium data suppressed for this county');
+
+  /* non-renewal */
+  const s2 = el.append('div').attr('class','d-sec');
+  s2.append('div').attr('class','s-title').html('<span>NON-RENEWAL RATE 2018–2023</span><span class="chip src">SRC · SENATE</span>');
+  const nrv = o? o.nr : N.nr;
+  if(nrv) bars(s2.append('div'), N.senYears, nrv, {color:(v)=>v>=(N.nr[5]*2)?'#ff5d5d':v>=N.nr[5]?'#ff8a3d':'#7c4a3e', ref:N.nr[5], refLab:'US ’23 '+pc(N.nr[5]), refC:'#8794a6', fmtV:pc});
+  else s2.append('div').attr('class','nodata').text('not covered in Senate release');
+
+  /* loss ratio */
+  const s3 = el.append('div').attr('class','d-sec');
+  s3.append('div').attr('class','s-title').html('<span>PAID LOSS RATIO 2018–2022</span><span class="chip src">SRC · FIO</span>');
+  const lrv = o? o.lr : N.lr;
+  if(lrv) bars(s3.append('div'), [2018,2019,2020,2021,2022], lrv, {color:v=>v>=1?'#ff5d5d':v>=.7?'#c98a2d':'#3f6f6a', ref:1, refLab:'1.0× breakeven', refC:'#ff5d5d'});
+  else s3.append('div').attr('class','nodata').text('no public data');
+  if(o && o.cs!=null) s3.append('div').attr('class','d-note').text('avg claim severity ’18–’22: '+money(o.cs)+' per paid claim · claim frequency ’22: '+pc1(o.cf?o.cf[4]:null));
+
+  /* declarations */
+  const s4 = el.append('div').attr('class','d-sec');
+  s4.append('div').attr('class','s-title').html('<span>FEDERAL DISASTER DECLARATIONS · 2000→</span><span class="chip src">SRC · FEMA</span>');
+  if(o){
+    if(o.dr){
+      const chips = s4.append('div').attr('class','declchips');
+      GK.forEach((g,i)=>{ if(o.dr.g[i]) chips.append('span').html(GLAB[g]+' <b style="color:var(--ink)">'+o.dr.g[i]+'</b>'); });
+      chips.append('span').style('border-color','#ffb22466').style('color','var(--amber)').html('SINCE ’21 <b>'+o.dr.l5+'</b>');
+      o.dr.ls.forEach(dd=> s4.append('div').attr('class','decl-line').html('<span class="y">'+dd[0]+'</span><span class="t">'+GLAB[dd[1]]+'</span><span>'+dd[2]+'</span>'));
+    } else s4.append('div').attr('class','nodata').text('no county-level declarations since 2000');
+  } else {
+    const t5 = N.noaa.top.slice(0,5);
+    t5.forEach(ev=> s4.append('div').attr('class','decl-line').html('<span class="y">'+ev.y+'</span><span class="t">$'+fmt1(ev.cost)+'B</span><span>'+ev.name+'</span>'));
+    s4.append('div').attr('class','d-note').text('costliest U.S. events on the (now-retired) federal ledger, CPI-adjusted');
+  }
+
+  /* percentile ranks */
+  if(o && o.rk){
+    const s5 = el.append('div').attr('class','d-sec');
+    s5.append('div').attr('class','s-title').html('<span>NATIONAL PERCENTILES</span><span class="chip src">SRC-DERIVED</span>');
+    const rows = [['PREMIUM LEVEL ’22','p'],['ESCALATION ’18→’22','g'],['NON-RENEWAL ’23','nr'],['LOSS RATIO','lr']];
+    for(const [labr,k] of rows){
+      if(o.rk[k]==null) continue;
+      const m = s5.append('div').attr('class','meter');
+      m.append('div').attr('class','m-lab').text(labr);
+      m.append('div').attr('class','m-bar').append('div').attr('class','m-fill')
+        .style('width',o.rk[k]+'%').style('background', o.rk[k]>85?'var(--red)':o.rk[k]>60?'var(--amber)':'#3f6f6a');
+      m.append('div').attr('class','m-val').text('P'+Math.round(o.rk[k]));
+    }
+  }
+
+  /* repricing index */
+  const s6 = el.append('div').attr('class','d-sec');
+  s6.append('div').attr('class','s-title').html('<span>REPRICING INDEX</span><span class="chip mod">MODELED</span>');
+  const dx = o? o.dx : null;
+  if(o && dx!=null){
+    const sv = s6.append('svg').attr('width',300).attr('height',56);
+    const arc = d3.arc().innerRadius(38).outerRadius(46).startAngle(-Math.PI/2);
+    const g = sv.append('g').attr('transform','translate(52,52)');
+    g.append('path').attr('d',arc({endAngle:Math.PI/2})).attr('fill','#1b232e');
+    g.append('path').attr('d',arc({endAngle:-Math.PI/2 + Math.PI*dx/100})).attr('fill', dx>80?'#ff5d5d':dx>55?'#ffb224':'#37d6c0');
+    g.append('text').attr('y',-4).attr('text-anchor','middle').attr('fill','#dde6f1')
+      .attr('font-family','var(--disp)').attr('font-weight',700).attr('font-size',20).text(Math.round(dx));
+    sv.append('text').attr('x',110).attr('y',24).attr('fill','#8794a6').attr('font-size',9.5)
+      .text('0–100 percentile blend of escalation,');
+    sv.append('text').attr('x',110).attr('y',36).attr('fill','#8794a6').attr('font-size',9.5)
+      .text('non-renewal, loss ratio, disasters.');
+    sv.append('text').attr('x',110).attr('y',48).attr('fill','#556173').attr('font-size',9)
+      .text('An editorial gauge — not actuarial advice.');
+  } else if(o) s6.append('div').attr('class','nodata').text('insufficient components to score');
+  else {
+    s6.append('div').attr('class','d-note').html(
+      'The five highest-pressure counties in America right now: '+
+      topDx().map(t=>'<a href="#" data-f="'+t.f+'">'+t.n+', '+t.st+'</a>').join(' · ')+'.');
+    s6.selectAll('a').on('click', function(e){ e.preventDefault(); selectCounty(this.dataset.f, true); });
+  }
+
+  /* compare strip when pinned */
+  if(o && S.pin && S.pin!==S.fips){
+    const p = C[S.pin];
+    const s7 = el.append('div').attr('class','d-sec');
+    s7.append('div').attr('class','s-title').html('<span>VS PINNED · '+p.n.toUpperCase()+', '+p.st+'</span>');
+    const rows = [
+      ['Premium ’22', o.p&&o.p[4], p.p&&p.p[4], money],
+      ['Escalation ’18→’22', o.gw, p.gw, x=>x==null?'—':x.toFixed(1)+'%'],
+      ['Non-renewal ’23', o.nr&&o.nr[5], p.nr&&p.nr[5], pc],
+      ['Repricing Index', o.dx, p.dx, x=>x==null?'—':Math.round(x)]
+    ];
+    rows.forEach(([labr,a,b,f])=> s7.append('div').attr('class','cmp-row')
+      .html('<span>'+labr+'</span><span><b>'+f(a)+'</b> <span style="color:#556173">vs</span> '+f(b)+'</span>'));
+  }
+}
+function topDx(){
+  return FIPS.filter(f=>C[f].dx!=null).sort((a,b)=>C[b].dx-C[a].dx).slice(0,5)
+    .map(f=>({f, n:C[f].n, st:C[f].st}));
+}
+
+/* ---------------- scatter ---------------- */
+let sctBuilt = false;
+function paintScatter(){
+  const sw = document.getElementById('scatterwrap').getBoundingClientRect();
+  const Wp = Math.max(sw.width, 700), Hp = Math.max(sw.height, 480);
+  const svgS = d3.select('#scatter').attr('viewBox',[0,0,Wp,Hp]).attr('width',Wp).attr('height',Hp);
+  svgS.selectAll('*').remove();
+  const m = {t:44,r:26,b:46,l:64};
+  const data = FIPS.map(f=>{
+    const o=C[f];
+    const lrs = o.lr? o.lr.filter(x=>x!=null):[];
+    return {f, n:o.n, st:o.st, x: lrs.length? d3.mean(lrs):null, y:o.gw, r:o.pf||null, c:o.nr?o.nr[5]:null};
+  }).filter(d=> d.x!=null && d.y!=null && (!S.st || d.st===S.st));
+  const x = d3.scaleLinear().domain([0, Math.min(2.2, d3.quantile(data.map(d=>d.x).sort(d3.ascending),.995)||2)]).range([m.l, Wp-m.r]).clamp(true);
+  const y = d3.scaleLinear().domain(d3.extent(data,d=>d.y)).nice().range([Hp-m.b, m.t]);
+  const r = d3.scaleSqrt().domain([0, d3.max(data,d=>d.r||1)]).range([1.6, 15]);
+  const cS = d3.scaleSequential(ramps.red).domain([0,.05]).clamp(true);
+  svgS.append('g').attr('class','grid').selectAll('line').data(x.ticks(8)).join('line')
+    .attr('x1',d=>x(d)).attr('x2',d=>x(d)).attr('y1',m.t).attr('y2',Hp-m.b);
+  svgS.append('g').attr('class','axis').attr('transform','translate(0,'+(Hp-m.b)+')')
+    .call(d3.axisBottom(x).ticks(8).tickFormat(d=>d+'×'));
+  svgS.append('g').attr('class','axis').attr('transform','translate('+m.l+',0)')
+    .call(d3.axisLeft(y).ticks(7).tickFormat(d=>d+'%'));
+  svgS.append('text').attr('class','qlabel').attr('x',Wp-m.r).attr('y',Hp-m.b+34).attr('text-anchor','end')
+    .text('AVG PAID LOSS RATIO 2018–22 (SOURCED · FIO) →');
+  svgS.append('text').attr('class','qlabel').attr('transform','rotate(-90)').attr('x',-m.t).attr('y',m.l-44).attr('text-anchor','end')
+    .text('PREMIUM ESCALATION ’18→’22 % (SOURCED) →');
+  /* reference lines */
+  svgS.append('line').attr('x1',x(1)).attr('x2',x(1)).attr('y1',m.t).attr('y2',Hp-m.b)
+    .attr('stroke','#ff5d5d66').attr('stroke-dasharray','4 4');
+  svgS.append('text').attr('class','qlabel').attr('x',x(1)+4).attr('y',m.t+10).attr('fill','#ff5d5d').text('1.0× — insurers underwater');
+  const natG = (N.prem[4]/N.prem[0]-1)*100;
+  svgS.append('line').attr('x1',m.l).attr('x2',Wp-m.r).attr('y1',y(natG)).attr('y2',y(natG))
+    .attr('stroke','#8794a655').attr('stroke-dasharray','4 4');
+  svgS.append('text').attr('class','qlabel').attr('x',Wp-m.r-4).attr('y',y(natG)-4).attr('text-anchor','end').text('national escalation '+natG.toFixed(1)+'%');
+  svgS.append('text').attr('class','qlabel').attr('x',Wp-m.r-4).attr('y',m.t-8).attr('text-anchor','end').attr('fill','#ffb224')
+    .text('↗ UPPER RIGHT = THE REPRICING FRONTIER · dot size = policies in force ’23 · color = non-renewal ’23');
+  svgS.append('g').selectAll('circle').data(data,d=>d.f).join('circle')
+    .attr('class','dot').classed('sel',d=>d.f===S.fips)
+    .attr('cx',d=>x(d.x)).attr('cy',d=>y(d.y)).attr('r',d=>d.r?r(d.r):2)
+    .attr('fill',d=> d.c==null?'#3a4656':cS(d.c)).attr('opacity',.82)
+    .on('mousemove',(e,d)=>{
+      tip.style('display','block').html('<div class="t-name">'+d.n+', '+d.st+'</div>'+
+        '<span class="t-dim">loss ratio</span> '+d.x.toFixed(2)+'× · <span class="t-dim">escalation</span> '+(d.y>0?'+':'')+d.y.toFixed(1)+'%<br>'+
+        '<span class="t-dim">non-renewal ’23</span> '+pc(d.c)+' · <span class="t-dim">policies</span> '+(d.r?d3.format(',')(d.r):'—'))
+        .style('left',(e.clientX+14)+'px').style('top',(e.clientY+12)+'px');
+    })
+    .on('mouseleave',hideTip)
+    .on('click',(e,d)=>{ selectCounty(d.f); });
+}
+window.addEventListener('resize', ()=>{ if(S.view==='sct') paintScatter(); });
+
+/* ---------------- timeline ---------------- */
+function renderTimeline(){
+  const el = document.getElementById('tl');
+  const Wt = el.clientWidth || 1160, Ht = 150;
+  const svgT = d3.select('#tl').attr('viewBox',[0,0,Wt,Ht]);
+  svgT.selectAll('*').remove();
+  const half = Math.floor(Wt*.56);
+  /* lane A: NOAA bars 1980-2024 */
+  const A = {l:38,r:half-6,t:12,b:Ht-36};
+  const ser = N.noaa.series;
+  const xA = d3.scaleBand().domain(ser.map(d=>d.y)).range([A.l,A.r]).padding(.22);
+  const yA = d3.scaleLinear().domain([0, d3.max(ser,d=>d.c)]).nice().range([A.b,A.t]);
+  const gA = svgT.append('g');
+  gA.append('g').attr('class','axis').attr('transform','translate('+A.l+',0)')
+    .call(d3.axisLeft(yA).ticks(4).tickFormat(d=>'$'+d));
+  gA.selectAll('rect').data(ser).join('rect')
+    .attr('x',d=>xA(d.y)).attr('width',xA.bandwidth())
+    .attr('y',d=>yA(d.c)).attr('height',d=>A.b-yA(d.c))
+    .attr('fill',d=> d.y>=2017?'#ff5d5d':'#7c3a3a')
+    .on('mousemove',(e,d)=>{ tip.style('display','block')
+      .html('<div class="t-name">'+d.y+'</div>'+d.n+' billion-dollar events · <b>$'+fmt1(d.c)+'B</b> CPI-adj')
+      .style('left',(e.clientX+14)+'px').style('top',(e.clientY-40)+'px'); })
+    .on('mouseleave',hideTip);
+  [1980,1990,2000,2010,2020,2024].forEach(yy=>{
+    gA.append('text').attr('x',xA(yy)).attr('y',Ht-22).attr('font-size',9).attr('fill','#8794a6').text(yy);
+  });
+  gA.append('line').attr('x1',A.r+2).attr('x2',A.r+2).attr('y1',A.t).attr('y2',A.b).attr('stroke','#556173').attr('stroke-dasharray','2 3');
+  gA.append('text').attr('x',A.r-2).attr('y',A.t+2).attr('text-anchor','end').attr('font-size',8.5).attr('fill','#ff8a3d')
+    .text('ledger retired May 2025 →');
+  /* lane B: exits 2021-2026.6 */
+  const B = {l:half+34,r:Wt-16,t:16,b:Ht-36};
+  const parse = d=>{ const [yy,mm]=d.split('-'); return +yy + (+mm-1)/12; };
+  const xB = d3.scaleLinear().domain([2021,2026.7]).range([B.l,B.r]);
+  const gB = svgT.append('g');
+  gB.append('line').attr('x1',B.l).attr('x2',B.r).attr('y1',(B.t+B.b)/2).attr('y2',(B.t+B.b)/2).attr('stroke','#1b232e');
+  for(let yy=2021; yy<=2026; yy++){
+    gB.append('line').attr('x1',xB(yy)).attr('x2',xB(yy)).attr('y1',B.b).attr('y2',B.b+4).attr('stroke','#556173');
+    gB.append('text').attr('x',xB(yy)).attr('y',Ht-22).attr('font-size',9).attr('fill','#8794a6').attr('text-anchor','middle').text(yy);
+  }
+  /* collision rows */
+  const placed=[];
+  const rows=[-30,-15,0,15,30];
+  const evs = N.exits.map(e=>({...e, x:xB(parse(e.d))}));
+  evs.forEach(e=>{
+    let row=2;
+    for(let ri=0; ri<rows.length; ri++){
+      const cand=[2,1,3,0,4][ri];
+      if(!placed.some(p=>p.row===cand && Math.abs(p.x-e.x)<14)){ row=cand; break; }
+    }
+    placed.push({x:e.x,row}); e.yy=(B.t+B.b)/2+rows[row];
+  });
+  const card = d3.select('#exitCard');
+  gB.selectAll('rect.ev').data(evs).join('rect')
+    .attr('class','ev')
+    .attr('x',d=>d.x-4.6).attr('y',d=>d.yy-4.6).attr('width',9.2).attr('height',9.2)
+    .attr('transform',d=>'rotate(45 '+d.x+' '+d.yy+')')
+    .attr('fill',d=>KIND[d.k].c).attr('stroke','#05070a').style('cursor','pointer')
+    .on('mousemove',(e,d)=>{
+      card.style('display','block')
+        .html('<div class="e-co">'+d.co+' <span class="e-d">· '+d.st+' · '+d.d+'</span></div>'+
+              '<div style="margin:3px 0 5px">'+d.ev+'</div>'+
+              '<a href="'+d.src+'" target="_blank" rel="noopener">source ↗</a>')
+        .style('left',Math.min(e.clientX+14, window.innerWidth-320)+'px').style('top',(e.clientY-90)+'px');
+    })
+    .on('mouseleave',()=>{ setTimeout(()=>{ if(!card.node().matches(':hover')) card.style('display','none'); }, 350); })
+    .on('click',(e,d)=>window.open(d.src,'_blank'));
+  card.on('mouseleave',()=>card.style('display','none'));
+  /* legend */
+  d3.select('#tlLegend').html(Object.entries(KIND).map(([k,v])=>'<span><i style="background:'+v.c+'"></i>'+v.lab+'</span>').join(''));
+}
+renderTimeline();
+window.addEventListener('resize', renderTimeline);
+
+/* ---------------- methodology ---------------- */
+d3.select('#methBtn').on('click', function(){
+  const m = document.getElementById('meth');
+  m.classList.toggle('open');
+  this.textContent = m.classList.contains('open')?'METHODOLOGY & SOURCES ▴':'METHODOLOGY & SOURCES ▾';
+});
+(function meth(){
+  const rows = N.sources.map(s=>'<tr><td><a href="'+s.url+'" target="_blank" rel="noopener">'+s.name+'</a></td><td>'+s.vintage+'</td><td>'+s.role+'</td></tr>').join('');
+  d3.select('#meth').html(
+   '<h3>DOCTRINE</h3>'+
+   '<p><span class="chip src">SOURCED</span> figures come straight from a public record listed below, transformed only by aggregation. '+
+   '<span class="chip mod">MODELED</span> figures are our estimates; the method is stated wherever they appear and they never mix silently with sourced values.</p>'+
+   '<h3>SOURCES</h3><table><tr><th>Dataset</th><th>Vintage</th><th>Feeds</th></tr>'+rows+'</table>'+
+   '<h3>TRANSFORMS</h3>'+
+   '<p>· ZIP→county: each 2020 ZCTA assigned to the county holding its largest land-area share (Census relationship file). ZIP≈ZCTA is an approximation.</p>'+
+   '<p>· County metrics are decile-weighted means of ZIP-level FIO metrics (Treasury publishes policy-count deciles, not counts). Treasury notes its public subset — ZIPs with ≥10 insurers & ≥50 policies — excludes ~22% of ZIPs and will not exactly match the FIO report’s aggregates; ours inherit that caveat and are composition-smoothed relative to policy-weighted national figures.</p>'+
+   '<p>· Senate non-renewal file: state header rows parsed; slash-combined small counties share one rate; “ARKANSAS County, TX” (a source typo) is the single unmatched row of 18,900+. Insurers in that collection ≈65% of the national market.</p>'+
+   '<p>· 2023–25 premium nowcast <span class="chip mod">MODELED</span>: county 2022 premium × national S&P GMI approved-rate anchors (+12.7%, +10.4%, +6.0%). A uniform national factor — real county filings vary widely around it.</p>'+
+   '<p>· Repricing Index <span class="chip mod">MODELED</span>: 0.35·pct(escalation ’18→’22) + 0.25·pct(non-renewal ’23) + 0.20·pct(avg loss ratio) + 0.20·pct(declarations since ’21). An editorial gauge, not an actuarial product.</p>'+
+   '<p>· The NOAA billion-dollar ledger ends at 2024: NCEI retired the product in May 2025. The bars stop because the counting stopped — not the weather.</p>'+
+   '<h3>KEYS</h3><p><kbd>/</kbd> search · <kbd>space</kbd> play years · <kbd>←</kbd><kbd>→</kbd> step year · <kbd>esc</kbd> deselect · scroll to zoom, drag to pan</p>'+
+   '<h3>LIMITATIONS</h3>'+
+   '<p>Premiums are written premium ÷ policies in force (FIO definition) — not rate filings; they reflect coverage amounts as well as price. County aggregation hides intra-county variation that drives real underwriting. Residual-market (FAIR/Citizens) and E&S policies are outside the FIO data — precisely the markets that grow when private carriers leave, so the stress shown here is a floor, not a ceiling.</p>');
+})();
+
+/* ---------------- boot ---------------- */
+document.getElementById('stateSel').value = S.st;
+if(S.st) zoomToState(S.st);
+setView(S.view);
+paint();
+if(S.fips) selectCounty(S.fips, true);
+window.addEventListener('hashchange', ()=>{
+  readHash();
+  document.getElementById('stateSel').value = S.st;
+  if(S.st) zoomToState(S.st);
+  setView(S.view); paint();
+  if(S.fips) selectCounty(S.fips, true); else selectCounty(null);
+});
+})();
+</script>
+</body>
+</html>
