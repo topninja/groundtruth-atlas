@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A unified county-level view of housing returns and insurance risk across the United States.">
+<meta name="theme-color" content="#10140f">
+<title>Groundtruth Atlas — Housing return and insurance risk</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect rx='8' width='32' height='32' fill='%2310140f'/%3E%3Cpath d='M7 23V9h5.5c4.5 0 7.5 2.4 7.5 7s-3 7-7.5 7H7Zm4-3h1.4c2.2 0 3.6-1.2 3.6-4s-1.4-4-3.6-4H11v8Zm11-11h3v14h-3z' fill='%23d9ff70'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg:#f2f0e9; --paper:#faf9f4; --ink:#182017; --muted:#687164; --quiet:#92998d;
+  --line:#d9dcd1; --line-strong:#bcc3b5; --night:#10140f; --night-2:#1a2118;
+  --acid:#d9ff70; --green:#4e7b52; --orange:#e56d3e; --red:#c9473b; --blue:#497a9d;
+  --violet:#765b96; --sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:Iowan Old Style,Palatino Linotype,Book Antiqua,Palatino,Georgia,serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box} html{background:var(--bg);scroll-behavior:smooth;max-width:100%;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;max-width:100%;overflow-x:hidden}
+button,input,select{font:inherit} button{color:inherit} a{color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #7ea82055;outline-offset:2px}
+.topbar{background:var(--night);color:#f4f5ec;padding:18px clamp(16px,3vw,42px) 0;position:relative;overflow:hidden}
+.topbar:after{content:"";position:absolute;width:520px;height:520px;right:-190px;top:-390px;border-radius:50%;border:1px solid #d9ff7044;box-shadow:0 0 0 70px #d9ff7008,0 0 0 140px #d9ff7006;pointer-events:none}
+.nav{display:flex;align-items:center;gap:24px;position:relative;z-index:1}
+.brand{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.brand i{display:inline-block;width:8px;height:8px;background:var(--acid);border-radius:50%;margin-right:9px;box-shadow:0 0 18px #d9ff7099}
+.nav-note{color:#9fa89b;font-size:12px}.nav-meta{margin-left:auto;display:flex;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;border:1px solid currentColor;border-radius:99px;padding:2px 7px;font:700 9px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.badge.src{color:#4f7b55}.badge.mod{color:var(--violet)}.topbar .badge.src{color:#9bd3a0}.topbar .badge.mod{color:#c8a8eb}
+.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(270px,.7fr);gap:40px;align-items:end;padding:54px 0 42px;position:relative;z-index:1}.hero>div{min-width:0}
+.eyebrow{font:700 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--acid);margin-bottom:15px}
+h1{font:400 clamp(43px,7vw,88px)/.91 var(--serif);letter-spacing:-.045em;margin:0;max-width:980px}
+h1 em{color:var(--acid);font-weight:400}.hero-copy{color:#b8c0b4;font-size:15px;max-width:480px;margin:0 0 4px}
+.switcher{display:flex;align-items:center;gap:5px;background:#252d22;border:1px solid #394136;padding:5px;border-radius:12px;margin-top:25px;width:max-content}
+.mode-btn{border:0;background:transparent;color:#9da698;padding:10px 16px;border-radius:8px;font:700 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.mode-btn.on{background:var(--acid);color:var(--night);box-shadow:0 2px 12px #0005}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);background:var(--paper)}
+.kpi{padding:21px clamp(14px,2vw,28px);border-right:1px solid var(--line);min-width:0}.kpi:last-child{border:0}
+.k-label{font:700 9px var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:flex;gap:7px;align-items:center}
+.k-value{font:500 clamp(24px,3vw,38px)/1 var(--serif);margin:9px 0 6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.k-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.workspace{display:grid;grid-template-columns:245px minmax(460px,1fr) 360px;gap:1px;background:var(--line);border-bottom:1px solid var(--line);min-height:690px}
+.rail,.detail,.stage{background:var(--paper)}.rail,.detail{padding:22px;overflow:auto}.rail{z-index:4}.detail{z-index:4}
+.control{margin-bottom:25px}.control-title{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:7px;margin-bottom:8px;font:700 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lens-btn{display:block;width:100%;border:0;border-radius:7px;background:transparent;padding:9px 10px;text-align:left;color:var(--muted);cursor:pointer;margin:2px 0}
+.lens-btn strong{display:block;font-size:12px;color:inherit}.lens-btn small{display:block;font-size:10px;color:var(--quiet);margin-top:1px}.lens-btn.on{background:#e9ecdf;color:var(--ink);box-shadow:inset 3px 0 var(--green)}
+.lens-btn.on small{color:var(--muted)}
+select,.search-input,.calc-input{width:100%;border:1px solid var(--line-strong);background:#fff;color:var(--ink);border-radius:7px;padding:9px 10px;font-size:12px}
+.search-wrap{position:relative}.search-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--line);box-shadow:0 12px 28px #17200f20;border-radius:8px;z-index:10;overflow:hidden}
+.search-results:empty{display:none}.search-results button{display:block;width:100%;border:0;border-bottom:1px solid var(--line);background:#fff;padding:9px 10px;text-align:left;font-size:12px;cursor:pointer}.search-results button:hover{background:#eef1e7}
+.year-wrap{display:none}.year-wrap.show{display:block}.year-head{display:flex;justify-content:space-between;align-items:end}.year-value{font:400 26px var(--serif)}
+input[type=range]{width:100%;accent-color:var(--green)}
+.rank button{width:100%;display:grid;grid-template-columns:20px 1fr auto;gap:6px;border:0;border-bottom:1px solid var(--line);background:transparent;padding:7px 2px;text-align:left;font-size:11px;cursor:pointer}.rank button:hover{color:var(--green)}
+.rank .num{color:var(--quiet);font-family:var(--mono)}.rank .value{font-family:var(--mono);color:var(--red);white-space:nowrap}
+.stage{position:relative;min-width:0;overflow:hidden;background:#eef0e8}.stage-head{height:54px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--line);background:var(--paper)}
+.view-switch{display:flex;gap:2px;background:#e8eadf;border-radius:7px;padding:3px}.view-btn{border:0;background:transparent;border-radius:5px;padding:7px 11px;cursor:pointer;font:700 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.view-btn.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px #18201718}
+.stage-context{margin-left:auto;font:700 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.map-wrap,.matrix-wrap{position:absolute;left:0;right:0;top:54px;bottom:0}.matrix-wrap[hidden],.map-wrap[hidden]{display:none}
+#map,#matrix{width:100%;height:100%;display:block}.county{stroke:#fff6;stroke-width:.15;cursor:pointer;transition:opacity .15s}.county:hover{stroke:var(--ink);stroke-width:1}.county.selected{stroke:#111;stroke-width:2;vector-effect:non-scaling-stroke}.county.dim{opacity:.12}.state-borders{fill:none;stroke:#f7f6f0;stroke-width:1;pointer-events:none;vector-effect:non-scaling-stroke}
+.zoom-controls{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 5px 16px #18201714}.zoom-controls button{width:34px;height:32px;border:0;border-bottom:1px solid var(--line);background:#fff;cursor:pointer}.zoom-controls button:last-child{border:0}
+.legend{position:absolute;left:16px;bottom:16px;background:#faf9f4eb;backdrop-filter:blur(7px);border:1px solid var(--line);padding:10px 11px;border-radius:8px;min-width:230px;box-shadow:0 8px 24px #18201712}.legend-title{font:700 9px var(--mono);letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}.gradient{height:8px;border-radius:99px}.legend-labels{display:flex;justify-content:space-between;font:9px var(--mono);color:var(--muted);margin-top:5px}.legend-note{font-size:9px;color:var(--quiet);margin-top:6px;max-width:290px}
+.tip{position:fixed;z-index:50;pointer-events:none;background:#10140feb;color:#fff;padding:10px 12px;border-radius:8px;box-shadow:0 12px 32px #0005;display:none;min-width:180px;font-size:11px}.tip strong{font:400 16px var(--serif);display:block}.tip span{color:#c3cbbf}
+.detail-head{padding-bottom:17px;border-bottom:1px solid var(--line);margin-bottom:17px}.detail-kicker{font:700 9px var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--green)}
+.detail-name{font:400 27px/1.05 var(--serif);margin:6px 0}.detail-sub{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.empty-state{padding:14px 0}.empty-state .big{font:400 34px/1.05 var(--serif);margin-bottom:13px}.empty-state p{color:var(--muted);font-size:13px}.empty-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}.empty-grid div{border:1px solid var(--line);padding:11px;border-radius:8px;font-size:11px}.empty-grid b{display:block;font:400 22px var(--serif)}
+.headline{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin:0 0 18px}.headline-label{font:700 9px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}.headline-value{font:400 42px/1 var(--serif);font-variant-numeric:tabular-nums}.headline-delta{font:11px var(--mono);color:var(--muted);text-align:right}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-bottom:18px}.stat{padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.stat:nth-child(2n){border-right:0}.stat:nth-last-child(-n+2){border-bottom:0}.stat label{display:block;font:700 8px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}.stat b{display:block;font:500 18px var(--serif);margin-top:3px}
+.section{border-top:1px solid var(--line);padding-top:15px;margin-top:16px}.section-title{display:flex;justify-content:space-between;gap:10px;align-items:center;font:700 9px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}.section-note{font-size:10px;color:var(--muted);margin-top:6px}.chart{width:100%;height:92px}.bar-list{display:flex;flex-direction:column;gap:7px}.bar-row{display:grid;grid-template-columns:36px 1fr 55px;gap:7px;align-items:center;font:9px var(--mono);color:var(--muted)}.bar-track{height:7px;background:#e5e8dd;border-radius:99px;overflow:hidden}.bar-fill{height:100%;border-radius:99px;background:var(--orange)}
+.risk-callout{background:var(--night);color:#f1f3e9;border-radius:10px;padding:14px;margin-top:17px}.risk-callout label{font:700 8px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--acid)}.risk-callout strong{display:block;font:400 27px var(--serif);margin:4px 0}.risk-callout p{font-size:11px;color:#b9c2b4;margin:0}
+.calc{border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;margin-top:18px}.calc-title{padding:10px 12px;background:#e8ebdf;font:700 9px var(--mono);letter-spacing:.1em;text-transform:uppercase}.calc-body{padding:12px}.calc-row{display:grid;grid-template-columns:90px 1fr;align-items:center;gap:10px;margin-bottom:8px}.calc-row label{font:9px var(--mono);color:var(--muted)}.calc-input{text-align:right;padding:7px 8px;font-family:var(--mono)}
+.uw{width:100%;border-collapse:collapse;font-size:10px;margin-top:10px}.uw td,.uw th{padding:5px 2px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}.uw td:first-child,.uw th:first-child{text-align:left}.uw th{font:700 8px var(--mono);color:var(--muted)}.uw .total td{font-weight:700;color:var(--ink)}.verdict{font-size:11px;color:var(--muted);border-left:2px solid var(--orange);padding-left:9px;margin-top:11px}.verdict b{color:var(--ink)}
+.matrix-note{position:absolute;left:18px;top:16px;font-size:11px;color:var(--muted);max-width:360px;background:#faf9f4dd;padding:8px 10px;border-radius:7px;z-index:2}.dot{cursor:pointer;stroke:#fff;stroke-width:.35;opacity:.58}.dot:hover,.dot.selected{opacity:1;stroke:#111;stroke-width:1.5}.dot.dim{opacity:.04}.axis text{fill:var(--muted);font:9px var(--mono)}.axis path,.axis line{stroke:var(--line-strong)}.quadrant{font:700 9px var(--mono);letter-spacing:.08em;text-transform:uppercase;fill:var(--quiet)}
+.about{padding:70px clamp(18px,5vw,72px);background:var(--night);color:#eef0e6}.about-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:clamp(30px,5vw,70px);max-width:1320px;margin:auto}.about h2{font:400 36px/1 var(--serif);margin:0 0 16px}.about h3{font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acid);margin:0 0 14px}.about p{color:#abb4a8;font-size:12px;margin:0 0 12px}.about a{color:var(--acid)}
+.drawer-btn{display:none;border:1px solid #394136;background:transparent;color:#e8ebdf;border-radius:7px;padding:7px 9px;font:700 9px var(--mono);letter-spacing:.08em}.scrim{display:none}
+@media(max-width:1120px){.workspace{grid-template-columns:220px minmax(430px,1fr) 320px}.hero{grid-template-columns:1fr}.hero-copy{display:none}}
+@media(max-width:900px){.nav-note{display:none}.drawer-btn{display:block}.workspace{display:block;min-height:640px}.stage{height:640px}.rail,.detail{position:fixed;top:0;bottom:0;width:min(360px,90vw);z-index:80;transition:transform .22s;box-shadow:0 0 40px #0003}.rail{left:0;transform:translateX(-105%)}.detail{right:0;transform:translateX(105%)}.rail.open,.detail.open{transform:none}.scrim{display:block;position:fixed;inset:0;background:#10140f88;z-index:70;opacity:0;pointer-events:none;transition:opacity .2s}.scrim.on{opacity:1;pointer-events:auto}.about-grid{grid-template-columns:1fr 1fr}.kpis{overflow-x:auto}.kpi{min-width:180px}}
+@media(max-width:620px){.topbar{padding-left:14px;padding-right:14px}.hero{padding:38px 0 30px}h1{font-size:40px;overflow-wrap:anywhere}.nav-meta .badge{display:none}.nav-meta{gap:4px}.drawer-btn{font-size:8px;padding:6px}.switcher{width:100%;max-width:100%}.mode-btn{flex:1;min-width:0;padding:9px 5px;white-space:normal}.kpis{grid-template-columns:repeat(4,165px)}.stage{height:520px}.stage-context{display:none}.legend{right:12px;left:12px;bottom:10px}.about{padding:48px 20px}.about-grid{grid-template-columns:1fr}.matrix-note{right:12px}.nav{gap:7px}.brand{font-size:10px;letter-spacing:.11em}}
+
+/* --------------------------------------------------------------------------
+   2026 redesign: compact application shell, floating dossier, cobalt system
+   -------------------------------------------------------------------------- */
+:root{
+  --bg:#eef0f6;--paper:#ffffff;--ink:#16182b;--muted:#63677c;--quiet:#969aae;
+  --line:#dfe2ed;--line-strong:#c9cddd;--night:#15182d;--night-2:#242844;
+  --acid:#6c5ce7;--green:#346a55;--orange:#f27555;--red:#d94d62;--blue:#4355d9;
+  --violet:#6953c5;--sans:Inter,Aptos,"Segoe UI",Arial,sans-serif;
+  --serif:Inter,Aptos,"Segoe UI",Arial,sans-serif;
+}
+body{background:var(--bg);font-size:14px}
+.topbar{background:linear-gradient(125deg,#f8f9ff 0%,#eef0ff 56%,#f7f2ff 100%);color:var(--ink);padding:0 clamp(18px,3vw,44px);border-bottom:1px solid #d9dced;overflow:visible}
+.topbar:after{width:340px;height:340px;right:-80px;top:-260px;border-color:#6c5ce72a;box-shadow:0 0 0 50px #6c5ce708,0 0 0 100px #6c5ce706}
+.nav{height:70px;gap:18px;border-bottom:1px solid #dfe2ef;position:relative}
+.brand{font-family:var(--sans);font-size:13px;font-weight:800;letter-spacing:-.01em;text-transform:none;color:#171a31}
+.brand i{width:12px;height:12px;border-radius:4px;background:linear-gradient(135deg,#5c6cff,#8c5ee8);box-shadow:0 4px 12px #5c6cff55;margin-right:10px;vertical-align:-1px}
+.nav-note{color:#777b91;font-size:11px;margin-left:2px}.nav-meta{position:relative;z-index:2}
+.topbar .badge{background:#fff;border-color:#d4d8e7;color:#666b81;padding:4px 8px}.topbar .badge.src{color:#26704c}.topbar .badge.mod{color:#6a4dbe}
+.switcher{margin:0 0 0 12px;width:auto;display:flex;background:#e3e6f3;border:0;padding:4px;border-radius:10px;box-shadow:none}
+.mode-btn{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:0;text-transform:none;color:#676b7f;padding:8px 14px;border-radius:7px;white-space:nowrap}
+.mode-btn.on{background:#4d5ee4;color:#fff;box-shadow:0 3px 10px #4355d938}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:40px;padding:26px 0 29px;min-height:126px}
+.eyebrow{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.13em;color:#5965c8;margin-bottom:7px}
+h1{font-family:var(--sans);font-weight:750;font-size:clamp(30px,3.2vw,46px);line-height:1.03;letter-spacing:-.045em;max-width:none;color:#171a31}
+h1 em{font-style:normal;font-weight:750;color:#5363e3}
+.hero-copy{font-size:13px;line-height:1.55;color:#686d82;max-width:455px;margin:0}
+.kpis{margin:22px clamp(18px,3vw,44px) 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border:0;background:transparent;position:relative;z-index:3}
+.kpi{border:1px solid var(--line);border-radius:14px;background:#fff;padding:16px 18px;box-shadow:0 5px 18px #23285208;min-height:105px}
+.kpi:last-child{border:1px solid var(--line)}
+.kpi:first-child{background:#1c2040;color:#fff;border-color:#1c2040;box-shadow:0 8px 22px #20274622}
+.kpi:first-child .k-label,.kpi:first-child .k-sub{color:#aeb5d1}.kpi:first-child .badge{color:#b9f4d5;border-color:#b9f4d577}
+.k-label{font-family:var(--sans);font-weight:750;font-size:9px;letter-spacing:.09em;color:#777b90}.k-value{font-family:var(--sans);font-weight:730;font-size:clamp(25px,2.6vw,35px);letter-spacing:-.04em;margin:10px 0 3px}.k-sub{font-size:10px;color:#777b8e}
+.badge{font-family:var(--sans);font-size:8px;letter-spacing:.04em;padding:2px 6px}
+.workspace{position:relative;display:grid;grid-template-columns:262px minmax(0,1fr);gap:16px;background:transparent;border:0;padding:16px clamp(18px,3vw,44px) 28px;min-height:0}
+.rail{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 5px 18px #23285208;max-height:720px}
+.control{margin-bottom:20px}.control-title{font-family:var(--sans);font-size:9px;font-weight:800;letter-spacing:.1em;color:#777b8e;border-color:#ebeef5}
+.lens-btn{border-radius:10px;padding:9px 10px}.lens-btn strong{font-size:12px;font-weight:700}.lens-btn small{font-size:10px}.lens-btn.on{background:#eef0ff;color:#3445cc;box-shadow:none}.lens-btn.on:before{content:"";display:inline-block;float:right;width:7px;height:7px;border-radius:50%;background:#5363e3;margin:6px 2px 0 8px}
+select,.search-input,.calc-input{border-color:#d8dce8;border-radius:9px;background:#f9faff;padding:10px 11px}
+.year-value{font-family:var(--sans);font-size:22px;font-weight:700;color:#3445cc}.rank button{grid-template-columns:18px 1fr auto;padding:8px 2px}.rank .value{color:#5363e3}
+.stage{height:720px;min-height:0;background:#e9ecf4;border:1px solid #d9ddea;border-radius:16px;overflow:hidden;box-shadow:0 5px 18px #2328520b}
+.stage-head{height:58px;padding:0 16px;background:#fff;border-color:#e5e8f1}.view-switch{background:#eef0f6;border-radius:9px}.view-btn{font-family:var(--sans);font-size:9px;border-radius:7px;padding:8px 12px}.view-btn.on{color:#3445cc}.stage-context{font-family:var(--sans);font-size:9px;color:#777b8e}
+.map-wrap,.matrix-wrap{top:58px;background:linear-gradient(180deg,#e9edf5,#f1f2f7)}
+.zoom-controls{right:18px;top:18px;border-color:#d6dae6;border-radius:10px}.zoom-controls button{color:#444a68;font-weight:700}
+.legend{left:18px;bottom:18px;background:#fffffff0;border-color:#d9ddea;border-radius:12px;padding:11px 13px;box-shadow:0 8px 26px #20274618}.legend-title{font-family:var(--sans);font-size:9px;color:#3d4158}.legend-labels{font-family:var(--sans)}
+.detail{position:absolute;right:calc(clamp(18px,3vw,44px) + 18px);top:90px;bottom:48px;width:360px;background:#ffffffef;backdrop-filter:blur(16px);border:1px solid #d9ddea;border-radius:18px;padding:20px;box-shadow:0 18px 48px #252b551f;z-index:12;max-height:none}
+.detail:not(.has-selection){bottom:auto;width:292px;padding:18px}.detail:not(.has-selection) .empty-state{padding:0}.detail:not(.has-selection) .empty-state .big{font-size:22px;line-height:1.12;letter-spacing:-.035em}.detail:not(.has-selection) .empty-state p{font-size:11px;margin-bottom:0}.detail:not(.has-selection) .empty-grid{display:none}
+.detail-head{padding-bottom:14px;margin-bottom:15px}.detail-kicker{font-family:var(--sans);font-size:9px;color:#5363e3}.detail-name{font-family:var(--sans);font-size:23px;font-weight:750;letter-spacing:-.035em}.detail-sub{font-family:var(--sans);font-size:9px}
+.detail-head{position:relative;padding-right:30px}.detail-close{position:absolute;right:0;top:-4px;width:28px;height:28px;border:1px solid #daddE8;border-radius:8px;background:#f6f7fb;color:#62677c;font-size:18px;line-height:1;cursor:pointer}.detail-close:hover{background:#eceeff;color:#3445cc}
+.headline-value{font-family:var(--sans);font-size:36px;font-weight:760;letter-spacing:-.045em}.headline-label{font-family:var(--sans)}.headline-delta{font-family:var(--sans)}
+.stat-grid{border-color:#dfe2ed;border-radius:12px}.stat label,.section-title{font-family:var(--sans)}.stat b{font-family:var(--sans);font-size:17px;letter-spacing:-.025em}
+.risk-callout{background:linear-gradient(135deg,#252a55,#4a4f9e);border-radius:13px}.risk-callout label{font-family:var(--sans);color:#cbd0ff}.risk-callout strong{font-family:var(--sans);font-size:25px;font-weight:720;letter-spacing:-.035em}.risk-callout p{color:#d7daf1}
+.calc{border-radius:13px}.calc-title{font-family:var(--sans);background:#eef0ff;color:#4251ce}.uw th{font-family:var(--sans)}
+.matrix-note{background:#ffffffee;border:1px solid #dce0ec;border-radius:10px;box-shadow:0 6px 18px #2328520d}.quadrant,.axis text{font-family:var(--sans)}
+.about{background:#1c2040;padding:64px clamp(18px,5vw,72px)}.about h2{font-family:var(--sans);font-size:31px;font-weight:740;letter-spacing:-.045em}.about h3{font-family:var(--sans);color:#aeb7ff}.about a{color:#bbc2ff}
+.drawer-btn{border-color:#cdd1e1;color:#3d425f;background:#fff;font-family:var(--sans)}
+@media(max-width:1120px){.hero{display:flex}.workspace{grid-template-columns:238px minmax(0,1fr)}.detail{width:330px}.nav-note{display:none}}
+@media(max-width:900px){
+  .topbar{padding:0 18px}.nav{height:auto;min-height:66px;flex-wrap:wrap;padding:10px 0}.brand{margin-right:auto}.switcher{order:3;width:100%;margin:0}.mode-btn{flex:1}.hero{min-height:0;padding:20px 0 23px}.hero-copy{display:block;max-width:360px}.kpis{margin:14px 16px 0}.workspace{display:block;padding:14px 16px 22px}.stage{height:640px}
+  .rail,.detail{position:fixed;top:0;bottom:0;width:min(360px,90vw);max-height:none;border-radius:0;z-index:80}.rail{left:0;transform:translateX(-105%)}.detail,.detail:not(.has-selection){right:0;top:0;bottom:0;width:min(360px,90vw);transform:translateX(105%);padding:20px}.detail.open,.rail.open{transform:none}.detail:not(.has-selection) .empty-grid{display:grid}.detail:not(.has-selection) .empty-state .big{font-size:28px}.drawer-btn{display:block}
+}
+@media(max-width:620px){
+  .topbar{padding:0 14px}.nav{gap:7px}.brand{font-size:11px}.nav-meta{margin-left:0}.hero{display:block;padding:18px 0 21px}.eyebrow{font-size:8px;margin-bottom:5px}h1{font-size:28px;line-height:1.06;letter-spacing:-.04em}.hero-copy{font-size:11px;line-height:1.45;margin-top:9px;max-width:320px}.mode-btn{font-size:10px;padding:8px}
+  .kpis{grid-template-columns:repeat(4,155px);gap:8px;margin:10px 12px 0}.kpi{min-width:0;min-height:95px;padding:14px}.k-value{font-size:25px}.workspace{padding:12px}.stage{height:540px;border-radius:13px}.stage-head{height:52px}.map-wrap,.matrix-wrap{top:52px}.legend{left:10px;right:10px;bottom:10px}.about{padding:44px 20px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="nav">
+    <div class="brand"><i></i>Groundtruth Atlas</div>
+    <div class="switcher" role="tablist" aria-label="Dataset">
+      <button class="mode-btn on" data-mode="cap" role="tab" aria-selected="true">Cap rate</button>
+      <button class="mode-btn" data-mode="premium" role="tab" aria-selected="false">Insurance</button>
+    </div>
+    <div class="nav-note">3,142 counties · return + risk</div>
+    <div class="nav-meta">
+      <span class="badge src">Sourced</span><span class="badge mod">Modeled</span>
+      <button class="drawer-btn" id="openFilters">Filters</button><button class="drawer-btn" id="openDetail">County</button>
+    </div>
+  </div>
+  <div class="hero">
+    <div>
+      <div class="eyebrow" id="heroEyebrow">Return, after the hidden expense</div>
+      <h1 id="heroTitle">Where the deal still <em>works.</em></h1>
+    </div>
+    <p class="hero-copy" id="heroCopy">Compare rental yield with the cost of insuring the same home. One map, one county, and a clearer view of what survives the underwrite.</p>
+  </div>
+</header>
+
+<section class="kpis" id="kpis" aria-label="National summary"></section>
+<div class="scrim" id="scrim"></div>
+
+<main class="workspace">
+  <aside class="rail" id="rail">
+    <div class="control"><div class="control-title"><span>Map lens</span><span id="lensKind">Return</span></div><div id="lenses"></div></div>
+    <div class="control year-wrap" id="yearWrap"><div class="year-head"><div class="control-title" style="border:0;margin:0"><span>Year</span></div><div class="year-value" id="yearValue"></div></div><input type="range" id="year" min="0" max="4" value="4" aria-label="Year"></div>
+    <div class="control"><div class="control-title">State</div><select id="state"><option value="">All states</option></select></div>
+    <div class="control"><div class="control-title">Find a county</div><div class="search-wrap"><input class="search-input" id="search" placeholder="County or state" autocomplete="off"><div class="search-results" id="searchResults"></div></div></div>
+    <div class="control"><div class="control-title"><span id="rankTitle">Highest values</span><span>Top 8</span></div><div class="rank" id="rank"></div></div>
+  </aside>
+
+  <section class="stage">
+    <div class="stage-head"><div class="view-switch"><button class="view-btn on" data-view="map">Map</button><button class="view-btn" data-view="matrix">Risk / return</button></div><div class="stage-context" id="stageContext"></div></div>
+    <div class="map-wrap" id="mapWrap">
+      <svg id="map" role="img" aria-label="Interactive United States county map"></svg>
+      <div class="zoom-controls"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="zoomReset" aria-label="Reset map">⌂</button></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="matrix-wrap" id="matrixWrap" hidden><div class="matrix-note">Counties above the line offer more modeled yield; counties farther right carry more insurance repricing pressure.</div><svg id="matrix" role="img" aria-label="County insurance risk versus cap rate chart"></svg></div>
+  </section>
+
+  <aside class="detail" id="detail"><div id="detailContent"></div></aside>
+</main>
+
+<section class="about">
+  <div class="about-grid">
+    <div><h2>Return and risk belong on the same page.</h2><p>A cap rate without insurance context can overstate a deal. A premium without property economics cannot show what the increase means. This atlas connects both county datasets through their shared FIPS code.</p><p><a href="#" id="backToMap">Explore the map ↑</a></p></div>
+    <div><h3>What is sourced</h3><p>Zillow ZHVI and ZORI, HUD Fair Market Rents, Census property-tax data, Treasury FIO/NAIC premium and loss metrics, Senate non-renewal data, and FEMA disaster declarations.</p><p>Sourced figures are transformed only for aggregation or ratios and are labeled throughout.</p></div>
+    <div><h3>What is modeled</h3><p>2023–2025 premium estimates use national approved-rate anchors. Effective cap rate applies a 23% operating stack. The Repricing Index blends premium growth, non-renewal, loss ratio, and recent declarations.</p><p>These are screening tools, not quotes, appraisals, or investment advice. Read the <a href="README.md">methodology and caveats</a>.</p></div>
+  </div>
+</section>
+
+<div class="tip" id="tip"></div>
+
+<script src="premium/vendor/d3.v7.min.js"></script>
+<script src="premium/vendor/topojson-client.min.js"></script>
+<script src="premium/data/topology.js"></script>
+<script src="premium/data/counties.js"></script>
+<script src="premium/data/national.js"></script>
+<script src="cap-rate/data/counties.js"></script>
+<script src="cap-rate/data/national.js"></script>
+<script>
+(() => {
+'use strict';
+if (!window.d3 || !window.topojson || !window.PM || !window.CR) {
+  document.body.innerHTML = '<p style="padding:40px;font-family:monospace">Data failed to load. Keep both source project folders beside this index.html.</p>';
+  return;
+}
+
+const PC = PM.counties, PN = PM.national, CC = CR.counties, CN = CR.national;
+const fmtMoney = v => v == null ? '—' : '$' + Math.round(v).toLocaleString('en-US');
+const fmtPct = (v, n=2) => v == null ? '—' : Number(v).toFixed(n) + '%';
+const fmtRate = v => v == null ? '—' : (v * 100).toFixed(2) + '%';
+const ramps = {
+  return: d3.interpolateRgbBasis(['#b7473f','#e58d53','#ece8d7','#9eba7b','#386d50']),
+  drag: d3.interpolateRgbBasis(['#edf0e7','#e8b770','#e36f46','#a92932']),
+  blue: d3.interpolateRgbBasis(['#edf0e7','#8fb3c6','#497a9d','#253e68']),
+  risk: d3.interpolateRgbBasis(['#edf0e7','#e6bd56','#e56d3e','#b62e3c']),
+  violet: d3.interpolateRgbBasis(['#edf0e7','#b7a3c9','#765b96','#412c5e'])
+};
+const LENSES = {
+  cap: [
+    {id:'cn', label:'Effective cap rate', hint:'After current insurance', tag:'mod', get:o=>o?.cn, fmt:v=>fmtPct(v), ramp:ramps.return},
+    {id:'dr', label:'Insurance drag', hint:'Cap-rate bps lost since 2021', tag:'mod', get:o=>o?.dr, fmt:v=>v==null?'—':Math.round(v)+' bps', ramp:ramps.drag},
+    {id:'gy', label:'Gross yield', hint:'Annual rent divided by value', tag:'src', get:o=>o?.gy, fmt:v=>fmtPct(v), ramp:ramps.return},
+    {id:'is', label:'Insurance share of rent', hint:'Premium as % of gross rent', tag:'mod', get:o=>o?.is, fmt:v=>fmtPct(v,1), ramp:ramps.risk},
+    {id:'c21', label:'Cap at 2021 insurance', hint:'The stale pro-forma comparison', tag:'mod', get:o=>o?.c21, fmt:v=>fmtPct(v), ramp:ramps.return}
+  ],
+  premium: [
+    {id:'prem', label:'Premium per policy', hint:'Annual average, 2018–2025', tag:'src', years:[2018,2019,2020,2021,2022,2023,2024,2025], modFrom:5, get:(o,i)=>i<5?o?.p?.[i]:o?.m?.[i-5], fmt:fmtMoney, ramp:ramps.risk},
+    {id:'gw', label:'Premium escalation', hint:'Change from 2018 to 2022', tag:'src', get:o=>o?.gw, fmt:v=>v==null?'—':(v>0?'+':'')+v.toFixed(1)+'%', ramp:ramps.drag, diverging:true},
+    {id:'nr', label:'Non-renewal rate', hint:'Insurer-declined renewals', tag:'src', years:[2018,2019,2020,2021,2022,2023], get:(o,i)=>o?.nr?.[i], fmt:fmtRate, ramp:ramps.risk},
+    {id:'lr', label:'Paid loss ratio', hint:'Claims paid / written premium', tag:'src', years:[2018,2019,2020,2021,2022], get:(o,i)=>o?.lr?.[i], fmt:v=>v==null?'—':v.toFixed(2)+'×', ramp:ramps.violet},
+    {id:'cf', label:'Claim frequency', hint:'Paid claims per policy', tag:'src', years:[2018,2019,2020,2021,2022], get:(o,i)=>o?.cf?.[i], fmt:fmtRate, ramp:ramps.blue},
+    {id:'dx', label:'Repricing Index', hint:'Composite pressure, 0–100', tag:'mod', get:o=>o?.dx, fmt:v=>v==null?'—':Math.round(v), ramp:ramps.violet}
+  ]
+};
+const S = {mode:'cap', lens:'cn', yi:4, state:'', county:null, view:'map'};
+const fipsAll = [...new Set([...Object.keys(PC), ...Object.keys(CC)])];
+const names = fipsAll.map(f => {const o=CC[f]||PC[f]; return {f,n:o.n,st:o.st,q:(o.n+' '+o.st).toLowerCase()};});
+const states = [...new Set(names.map(d=>d.st))].sort();
+const byId = id => document.getElementById(id);
+const lens = () => LENSES[S.mode].find(d=>d.id===S.lens) || LENSES[S.mode][0];
+const datum = f => S.mode==='cap' ? CC[f] : PC[f];
+function metricValue(L,o,i=S.yi){
+  const v=L.get(o,i);
+  if(!Number.isFinite(v)) return null;
+  // One upstream ACS row carries an invalid negative tax rate. Do not let the
+  // resulting six-figure cap-rate artifact enter maps, ranks, or charts.
+  if((L.id==='cn'||L.id==='c21') && (v < -20 || v > 30)) return null;
+  return v;
+}
+
+function readHash(){
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(['cap','premium'].includes(h.get('m'))) S.mode=h.get('m');
+  if(LENSES[S.mode].some(d=>d.id===h.get('l'))) S.lens=h.get('l');
+  if(h.get('s')) S.state=h.get('s');
+  if(h.get('c') && (CC[h.get('c')]||PC[h.get('c')])) S.county=h.get('c');
+  if(h.get('v')==='matrix') S.view='matrix';
+  const L=lens(); if(L.years){const i=L.years.indexOf(+h.get('y')); S.yi=i>=0?i:(L.modFrom!=null?L.modFrom-1:L.years.length-1);}
+}
+function writeHash(){
+  const h=new URLSearchParams();h.set('m',S.mode);h.set('l',S.lens);
+  const L=lens();if(L.years)h.set('y',L.years[S.yi]);if(S.state)h.set('s',S.state);if(S.county)h.set('c',S.county);if(S.view==='matrix')h.set('v','matrix');
+  history.replaceState(null,'','#'+h.toString());
+}
+readHash();
+
+for(const st of states){const o=document.createElement('option');o.value=o.textContent=st;byId('state').appendChild(o);}
+
+const W=975,H=610;
+const map=d3.select('#map').attr('viewBox',[0,0,W,H]);
+const mapRoot=map.append('g');
+const features=topojson.feature(PM.topology,PM.topology.objects.counties).features;
+const featureById=new Map(features.map(d=>[d.id,d]));
+const projection=d3.geoAlbersUsa().scale(1300).translate([W/2,H/2]);
+const path=d3.geoPath(projection);
+const paths=mapRoot.append('g').selectAll('path').data(features).join('path').attr('class','county').attr('d',path)
+  .on('mousemove',countyTip).on('mouseleave',hideTip).on('click',(e,d)=>selectCounty(d.id,true));
+mapRoot.append('path').attr('class','state-borders').attr('d',path(topojson.mesh(PM.topology,PM.topology.objects.states,(a,b)=>a!==b)));
+const zoom=d3.zoom().scaleExtent([1,9]).on('zoom',e=>mapRoot.attr('transform',e.transform));map.call(zoom);
+byId('zoomIn').onclick=()=>map.transition().call(zoom.scaleBy,1.6);byId('zoomOut').onclick=()=>map.transition().call(zoom.scaleBy,.625);byId('zoomReset').onclick=()=>map.transition().call(zoom.transform,d3.zoomIdentity);
+
+function values(){const L=lens();return fipsAll.map(f=>metricValue(L,datum(f))).filter(Number.isFinite).sort(d3.ascending);}
+function colorScale(){
+  const L=lens(), vals=values();let lo=d3.quantileSorted(vals,.03),hi=d3.quantileSorted(vals,.97);if(lo===hi){lo-=1;hi+=1}
+  if(L.diverging){const abs=Math.max(Math.abs(lo),Math.abs(hi));lo=-abs;hi=abs}
+  const sc=d3.scaleSequential(L.ramp).domain([lo,hi]).clamp(true);return {sc,lo,hi};
+}
+function paint(){
+  const L=lens(), cs=colorScale();
+  paths.attr('fill',d=>{const v=metricValue(L,datum(d.id));return Number.isFinite(v)?cs.sc(v):'#dfe2d8'})
+    .classed('dim',d=>S.state&&((CC[d.id]||PC[d.id])?.st!==S.state)).classed('selected',d=>d.id===S.county);
+  const stops=d3.range(0,1.01,.1).map(t=>cs.sc(cs.lo+(cs.hi-cs.lo)*t));
+  byId('legend').innerHTML=`<div class="legend-title">${L.label}</div><div class="gradient" style="background:linear-gradient(90deg,${stops.join(',')})"></div><div class="legend-labels"><span>${L.fmt(cs.lo)}</span><span>${L.fmt((cs.lo+cs.hi)/2)}</span><span>${L.fmt(cs.hi)}</span></div><div class="legend-note">Scale trims the outer 3% for legibility. Missing counties are gray.</div>`;
+  if(S.view==='matrix') drawMatrix();
+}
+function countyTip(e,d){
+  const o=datum(d.id), fallback=CC[d.id]||PC[d.id]; if(!fallback)return;
+  const L=lens(),v=metricValue(L,o),tip=byId('tip');tip.innerHTML=`<strong>${fallback.n} County, ${fallback.st}</strong><span>${L.label}: ${L.fmt(v)}</span>`;tip.style.display='block';tip.style.left=Math.min(e.clientX+14,window.innerWidth-220)+'px';tip.style.top=Math.min(e.clientY+14,window.innerHeight-80)+'px';
+}
+function hideTip(){byId('tip').style.display='none'}
+
+function renderHero(){
+  const premium=S.mode==='premium';
+  byId('heroEyebrow').textContent=premium?'The second mortgage nobody signed':'Return, after the hidden expense';
+  byId('heroTitle').innerHTML=premium?'Where risk gets <em>repriced.</em>':'Where the deal still <em>works.</em>';
+  byId('heroCopy').textContent=premium?'Follow premium escalation, non-renewals, insured losses, and disaster history—then see what those pressures mean for housing returns.':'Compare rental yield with the cost of insuring the same home. One map, one county, and a clearer view of what survives the underwrite.';
+  document.querySelectorAll('.mode-btn').forEach(b=>{const on=b.dataset.mode===S.mode;b.classList.toggle('on',on);b.setAttribute('aria-selected',on)});
+  byId('lensKind').textContent=premium?'Insurance':'Return';
+}
+function renderKpis(){
+  let cards;
+  if(S.mode==='cap') cards=[
+    ['Counties priced',CN.count.toLocaleString(),'ZORI + HUD rent coverage','src'],
+    ['Median effective cap',fmtPct(CN.med_cn),'After current insurance','mod'],
+    ['Median insurance drag',CN.med_drag+' bps','Loss versus 2021 premium','mod'],
+    ['Insurance share',fmtPct(CN.med_is,1),'Median share of gross rent','mod']
+  ]; else {
+    const covered=Object.values(PC).filter(o=>o.p?.[4]!=null).length;
+    const medDx=d3.median(Object.values(PC),o=>o.dx);
+    cards=[['Counties covered',Object.keys(PC).length.toLocaleString(),covered.toLocaleString()+' with premium data','src'],['Avg. premium · 2022',fmtMoney(PN.prem[4]),'Treasury FIO / NAIC','src'],['Est. premium · 2025',fmtMoney(PN.premE[2]),'National rate-anchor nowcast','mod'],['Median repricing index',Math.round(medDx),'/ 100 county pressure','mod']];
+  }
+  byId('kpis').innerHTML=cards.map(c=>`<div class="kpi"><div class="k-label">${c[0]} <span class="badge ${c[3]}">${c[3]}</span></div><div class="k-value">${c[1]}</div><div class="k-sub">${c[2]}</div></div>`).join('');
+}
+function renderControls(){
+  byId('lenses').innerHTML=LENSES[S.mode].map(L=>`<button class="lens-btn ${L.id===S.lens?'on':''}" data-lens="${L.id}"><strong>${L.label}</strong><small>${L.hint}</small></button>`).join('');
+  byId('lenses').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.lens=b.dataset.lens;const L=lens();if(L.years)S.yi=L.modFrom!=null?L.modFrom-1:L.years.length-1;renderAll(false);writeHash()});
+  const L=lens(),yw=byId('yearWrap');yw.classList.toggle('show',!!L.years);
+  if(L.years){byId('year').max=L.years.length-1;byId('year').value=S.yi;byId('yearValue').innerHTML=L.years[S.yi]+(L.modFrom!=null&&S.yi>=L.modFrom?' <span class="badge mod">est.</span>':'')}
+  byId('state').value=S.state;byId('stageContext').textContent=(S.state||'United States')+' · '+L.label;
+  renderRanking();
+}
+function renderRanking(){
+  const L=lens();const rows=fipsAll.map(f=>({f,o:datum(f),base:CC[f]||PC[f]})).filter(d=>d.o&&(!S.state||d.base.st===S.state)).map(d=>({...d,v:metricValue(L,d.o)})).filter(d=>Number.isFinite(d.v)).sort((a,b)=>b.v-a.v).slice(0,8);
+  byId('rankTitle').textContent=L.id==='cn'||L.id==='gy'?'Highest returns':'Highest values';
+  byId('rank').innerHTML=rows.map((d,i)=>`<button data-f="${d.f}"><span class="num">${i+1}</span><span>${d.base.n}, ${d.base.st}</span><span class="value">${L.fmt(d.v)}</span></button>`).join('');
+  byId('rank').querySelectorAll('button').forEach(b=>b.onclick=()=>selectCounty(b.dataset.f,true));
+}
+
+function renderDetail(){
+  const root=byId('detailContent');byId('detail').classList.toggle('has-selection',!!S.county);if(!S.county){
+    root.innerHTML=`<div class="empty-state"><div class="detail-kicker">County dossier</div><div class="big">Choose a place.<br>See the whole deal.</div><p>Click any county, search by name, or use a ranked result. Your selection stays put as you switch between return and insurance.</p><div class="empty-grid"><div><b>${CN.count.toLocaleString()}</b>priced counties</div><div><b>${Object.keys(PC).length.toLocaleString()}</b>risk profiles</div><div><b>11</b>map lenses</div><div><b>1</b>shared view</div></div></div>`;return;
+  }
+  const f=S.county,c=CC[f],p=PC[f],base=c||p,L=lens(),active=datum(f),val=metricValue(L,active);
+  root.innerHTML=`<div class="detail-head"><button class="detail-close" id="closeDetail" aria-label="Close county dossier">×</button><div class="detail-kicker">${S.mode==='cap'?'Deal underwrite':'Insurance dossier'}</div><div class="detail-name">${base.n} County, ${base.st}</div><div class="detail-sub">FIPS ${f} · ${c?'RETURN DATA':''}${c&&p?' + ':''}${p?'INSURANCE DATA':''}</div></div><div class="headline"><div><div class="headline-label">${L.label}${L.years?' · '+L.years[S.yi]:''} <span class="badge ${(L.modFrom!=null&&S.yi>=L.modFrom)||L.tag==='mod'?'mod':'src'}">${(L.modFrom!=null&&S.yi>=L.modFrom)||L.tag==='mod'?'modeled':'sourced'}</span></div><div class="headline-value">${L.fmt(val)}</div></div><div class="headline-delta">${c?'CAP '+fmtPct(c.cn):''}<br>${p?.dx!=null?'RISK '+Math.round(p.dx)+'/100':''}</div></div>`+(S.mode==='cap'?capDetail(c,p):premiumDetail(p,c));
+  byId('closeDetail').onclick=()=>{S.county=null;renderDetail();paint();writeHash();closeDrawers()};
+  if(S.mode==='cap'&&c) bindCalculator(c);drawDetailCharts(p);
+}
+function capDetail(c,p){if(!c)return '<p class="section-note">This county does not have complete value and rent inputs for a cap-rate estimate. Switch to Insurance Premium for the available record.</p>';
+  const taxRate=c.tx>0&&c.tx<.1?c.tx:CN.assumptions.tax_fallback, cap21=metricValue(LENSES.cap.find(d=>d.id==='c21'),c,0), capNow=metricValue(LENSES.cap[0],c,0);
+  return `<div class="stat-grid"><div class="stat"><label>Home value · ZHVI</label><b>${fmtMoney(c.v)}</b></div><div class="stat"><label>Rent / month · ${c.rb}</label><b>${fmtMoney(c.r)}</b></div><div class="stat"><label>Gross yield</label><b>${fmtPct(c.gy)}</b></div><div class="stat"><label>Property tax rate${taxRate!==c.tx?' · fallback':''}</label><b>${fmtPct(taxRate*100)}</b></div></div><div class="section"><div class="section-title"><span>Premium trajectory</span><span><span class="badge src">2018–22</span> <span class="badge mod">2023–25</span></span></div><svg class="chart" id="premiumChart"></svg><div class="section-note">County premium history and modeled tail from the insurance dataset.</div></div><div class="risk-callout"><label>Insurance drag since 2021</label><strong>−${c.dr} basis points</strong><p>Modeled cap rate moves from ${fmtPct(cap21)} using 2021 insurance to ${fmtPct(capNow)} using the current estimate.${p?.dx!=null?' Repricing pressure ranks '+Math.round(p.dx)+' / 100.':''}</p></div><div class="calc"><div class="calc-title">Test your deal</div><div class="calc-body"><div class="calc-row"><label>LIST PRICE $</label><input class="calc-input" id="price" inputmode="numeric" value="${c.v.toLocaleString()}"></div><div class="calc-row"><label>RENT $ / MO</label><input class="calc-input" id="rent" inputmode="numeric" value="${c.r.toLocaleString()}"></div><div id="calcOutput"></div><div class="verdict" id="verdict"></div></div></div>`;
+}
+function premiumDetail(p,c){if(!p)return '<p class="section-note">This county does not have an insurance risk profile. Switch to Cap Rate for the available record.</p>';
+  const maxPrem=Math.max(...(p.p||[]),...(p.m||[]),1);const bars=(p.p||[]).map((v,i)=>`<div class="bar-row"><span>${2018+i}</span><div class="bar-track"><div class="bar-fill" style="width:${v/maxPrem*100}%"></div></div><span>${fmtMoney(v)}</span></div>`).join('');
+  const disaster=p.dr?`<div class="stat-grid"><div class="stat"><label>Since 2000</label><b>${p.dr.t}</b></div><div class="stat"><label>Since 2021</label><b>${p.dr.l5}</b></div><div class="stat"><label>2023 non-renewal</label><b>${fmtRate(p.nr?.[5])}</b></div><div class="stat"><label>2022 loss ratio</label><b>${p.lr?.[4]!=null?p.lr[4].toFixed(2)+'×':'—'}</b></div></div>`:'';
+  return `<div class="section" style="border-top:0;padding-top:0"><div class="section-title"><span>Premium trajectory</span><span><span class="badge src">2018–22</span> <span class="badge mod">2023–25</span></span></div><svg class="chart" id="premiumChart"></svg><div class="bar-list">${bars}</div></div><div class="section"><div class="section-title"><span>Federal disaster declarations</span><span class="badge src">FEMA</span></div>${disaster||'<div class="section-note">No county declaration summary available.</div>'}</div><div class="risk-callout"><label>Connected deal signal</label><strong>${c?fmtPct(c.cn)+' effective cap':'No cap estimate'}</strong><p>${c?'Insurance consumes '+fmtPct(c.is,1)+' of gross rent and has removed '+c.dr+' cap-rate basis points since 2021.':'The value and rent series needed for a return estimate are incomplete here.'}</p></div>`;
+}
+function drawDetailCharts(p){if(!p?.p||!byId('premiumChart'))return;const ys=[2018,2019,2020,2021,2022,2023,2024,2025],vals=p.p.concat(p.m||[]),svg=d3.select('#premiumChart'),w=310,h=88,m={t:8,r:8,b:18,l:8};svg.attr('viewBox',[0,0,w,h]).selectAll('*').remove();const x=d3.scalePoint().domain(ys).range([m.l,w-m.r]),y=d3.scaleLinear().domain([d3.min(vals)*.94,d3.max(vals)*1.04]).range([h-m.b,m.t]);const line=d3.line().x((d,i)=>x(ys[i])).y(d=>y(d));svg.append('path').datum(vals.slice(0,5)).attr('d',line).attr('fill','none').attr('stroke','#e56d3e').attr('stroke-width',2);svg.append('path').datum(vals.slice(4)).attr('d',d3.line().x((d,i)=>x(ys[i+4])).y(d=>y(d))).attr('fill','none').attr('stroke','#765b96').attr('stroke-width',2).attr('stroke-dasharray','4 3');svg.selectAll('circle').data(vals).join('circle').attr('cx',(d,i)=>x(ys[i])).attr('cy',d=>y(d)).attr('r',2.5).attr('fill',(d,i)=>i<5?'#e56d3e':'#765b96');svg.append('g').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).tickValues([2018,2022,2025]).tickSize(0)).call(g=>g.select('.domain').remove()).attr('font-family','var(--mono)').attr('font-size',8).attr('color','#687164');}
+function bindCalculator(c){const price=byId('price'),rent=byId('rent');if(!price||!rent)return;const run=()=>{const P=+price.value.replace(/\D/g,'')||c.v,R=+rent.value.replace(/\D/g,'')||c.r,scale=P/c.v,p21=c.p21*scale,p25=c.p25*scale,gross=12*R,opex=gross*.23,taxRate=c.tx>0&&c.tx<.1?c.tx:CN.assumptions.tax_fallback,tax=taxRate*P,n21=gross-opex-tax-p21,n25=gross-opex-tax-p25,cr21=n21/P*100,cr25=n25/P*100,drag=Math.round((p25-p21)/P*1e4),be=Math.ceil((p25-p21)/12/.77);byId('calcOutput').innerHTML=`<table class="uw"><tr><th></th><th>2021 INS.</th><th>CURRENT</th></tr><tr><td>Gross rent / year</td><td>${fmtMoney(gross)}</td><td>${fmtMoney(gross)}</td></tr><tr><td>Operating stack · 23%</td><td>−${fmtMoney(opex)}</td><td>−${fmtMoney(opex)}</td></tr><tr><td>Property tax</td><td>−${fmtMoney(tax)}</td><td>−${fmtMoney(tax)}</td></tr><tr><td>Insurance</td><td>−${fmtMoney(p21)}</td><td>−${fmtMoney(p25)}</td></tr><tr class="total"><td>Cap rate</td><td>${fmtPct(cr21)}</td><td>${fmtPct(cr25)}</td></tr></table>`;byId('verdict').innerHTML=`Current insurance takes <b>${drag} bps</b>. About <b>+${fmtMoney(be)}/mo</b> in rent would offset the increase.`};price.oninput=rent.oninput=run;run();}
+
+function selectCounty(f,zoomTo=false){if(!(CC[f]||PC[f]))return;S.county=f;renderDetail();paint();writeHash();if(zoomTo&&S.view==='map'){const feat=featureById.get(f);if(feat){const b=path.bounds(feat),dx=b[1][0]-b[0][0],dy=b[1][1]-b[0][1],cx=(b[0][0]+b[1][0])/2,cy=(b[0][1]+b[1][1])/2,k=Math.min(7,.7/Math.max(dx/W,dy/H));map.transition().duration(600).call(zoom.transform,d3.zoomIdentity.translate(W/2,H/2).scale(k).translate(-cx,-cy));}}if(innerWidth<=900)openDrawer('detail');}
+
+function drawMatrix(){
+  const el=byId('matrixWrap'),rect=el.getBoundingClientRect(),w=Math.max(500,rect.width),h=Math.max(460,rect.height),m={t:55,r:28,b:50,l:58};const rows=Object.keys(CC).filter(f=>PC[f]?.dx!=null&&metricValue(LENSES.cap[0],CC[f],0)!=null).map(f=>({f,x:PC[f].dx,y:CC[f].cn,drag:CC[f].dr,st:CC[f].st,n:CC[f].n}));const svg=d3.select('#matrix').attr('viewBox',[0,0,w,h]);svg.selectAll('*').remove();const x=d3.scaleLinear().domain([0,100]).range([m.l,w-m.r]),y=d3.scaleLinear().domain([d3.quantile(rows.map(d=>d.y).sort(d3.ascending),.01),d3.quantile(rows.map(d=>d.y).sort(d3.ascending),.99)]).range([h-m.b,m.t]);const medianX=d3.median(rows,d=>d.x),medianY=d3.median(rows,d=>d.y);svg.append('rect').attr('x',x(medianX)).attr('y',m.t).attr('width',w-m.r-x(medianX)).attr('height',y(medianY)-m.t).attr('fill','#e56d3e0d');svg.append('line').attr('x1',x(medianX)).attr('x2',x(medianX)).attr('y1',m.t).attr('y2',h-m.b).attr('stroke','#bcc3b5').attr('stroke-dasharray','4 4');svg.append('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',y(medianY)).attr('y2',y(medianY)).attr('stroke','#bcc3b5').attr('stroke-dasharray','4 4');svg.append('text').attr('class','quadrant').attr('x',w-m.r).attr('y',m.t+12).attr('text-anchor','end').text('Higher return / higher pressure');const drag=d3.scaleSequential(ramps.drag).domain(d3.extent(rows,d=>d.drag));svg.append('g').selectAll('circle').data(rows).join('circle').attr('class','dot').classed('selected',d=>d.f===S.county).classed('dim',d=>S.state&&d.st!==S.state).attr('cx',d=>x(d.x)).attr('cy',d=>y(d.y)).attr('r',2.7).attr('fill',d=>drag(d.drag)).on('mousemove',(e,d)=>{const tip=byId('tip');tip.innerHTML=`<strong>${d.n} County, ${d.st}</strong><span>Cap ${fmtPct(d.y)} · risk ${Math.round(d.x)} · drag ${d.drag} bps</span>`;tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-250)+'px';tip.style.top=Math.min(e.clientY+14,innerHeight-80)+'px'}).on('mouseleave',hideTip).on('click',(e,d)=>selectCounty(d.f));svg.append('g').attr('class','axis').attr('transform',`translate(0,${h-m.b})`).call(d3.axisBottom(x).ticks(5));svg.append('g').attr('class','axis').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(6).tickFormat(d=>d+'%'));svg.append('text').attr('x',(m.l+w-m.r)/2).attr('y',h-13).attr('text-anchor','middle').attr('class','quadrant').text('Insurance repricing index →');svg.append('text').attr('transform','rotate(-90)').attr('x',-(m.t+h-m.b)/2).attr('y',16).attr('text-anchor','middle').attr('class','quadrant').text('Effective cap rate →');
+}
+function setView(v){S.view=v;byId('mapWrap').hidden=v!=='map';byId('matrixWrap').hidden=v!=='matrix';document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('on',b.dataset.view===v));if(v==='matrix')requestAnimationFrame(drawMatrix);writeHash();}
+function renderAll(detail=true){renderHero();renderKpis();renderControls();paint();if(detail)renderDetail();setView(S.view);}
+
+document.querySelectorAll('.mode-btn').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;S.lens=LENSES[S.mode][0].id;S.yi=S.mode==='premium'?4:0;renderAll();writeHash()});
+document.querySelectorAll('.view-btn').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+byId('year').oninput=e=>{S.yi=+e.target.value;renderControls();paint();renderDetail();writeHash()};
+byId('state').onchange=e=>{S.state=e.target.value;renderControls();paint();writeHash()};
+byId('search').oninput=e=>{const q=e.target.value.trim().toLowerCase();const hits=q?names.filter(d=>d.q.includes(q)).slice(0,7):[];byId('searchResults').innerHTML=hits.map(d=>`<button data-f="${d.f}">${d.n} County, ${d.st}</button>`).join('');byId('searchResults').querySelectorAll('button').forEach(b=>b.onclick=()=>{byId('search').value='';byId('searchResults').innerHTML='';selectCounty(b.dataset.f,true)})};
+document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();byId('search').focus()}if(e.key==='Escape'){byId('searchResults').innerHTML='';closeDrawers()}});
+function openDrawer(which){closeDrawers();byId(which==='rail'?'rail':'detail').classList.add('open');byId('scrim').classList.add('on')}
+function closeDrawers(){byId('rail').classList.remove('open');byId('detail').classList.remove('open');byId('scrim').classList.remove('on')}
+byId('openFilters').onclick=()=>openDrawer('rail');byId('openDetail').onclick=()=>openDrawer('detail');byId('scrim').onclick=closeDrawers;byId('backToMap').onclick=e=>{e.preventDefault();scrollTo({top:document.querySelector('.workspace').offsetTop,behavior:'smooth'})};
+window.addEventListener('resize',()=>{if(S.view==='matrix')drawMatrix()});
+window.addEventListener('hashchange',()=>{readHash();renderAll()});
+renderAll();
+})();
+</script>
+</body>
+</html>
